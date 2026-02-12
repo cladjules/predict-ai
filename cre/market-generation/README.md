@@ -11,6 +11,7 @@ If your workflow does not do any chain write then you can just put any dummy key
 
 ```
 CRE_ETH_PRIVATE_KEY=0000000000000000000000000000000000000000000000000000000000000001
+CLAUDE_API_KEY_ALL=sk........
 ```
 
 Note: Make sure your `workflow.yaml` file is pointing to the config.json, example:
@@ -18,7 +19,7 @@ Note: Make sure your `workflow.yaml` file is pointing to the config.json, exampl
 ```yaml
 staging-settings:
   user-workflow:
-    workflow-name: "hello-world"
+    workflow-name: "market-generation"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.json"
@@ -29,13 +30,7 @@ staging-settings:
 If `bun` is not already installed, see https://bun.com/docs/installation for installing in your environment.
 
 ```bash
-cd <workflow-name> && bun install
-```
-
-Example: For a workflow directory named `hello-world` the command would be:
-
-```bash
-cd hello-world && bun install
+cd market-generation && npm install
 ```
 
 ## 3. Simulate the workflow
@@ -43,11 +38,5 @@ cd hello-world && bun install
 Run the command from <b>project root directory</b>
 
 ```bash
-cre workflow simulate <path-to-workflow-directory> --target=staging-settings
-```
-
-Example: For workflow named `hello-world` the command would be:
-
-```bash
-cre workflow simulate ./hello-world --target=staging-settings
+cre workflow simulate ./market-generation --target=staging-settings
 ```
