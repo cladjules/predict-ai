@@ -1,0 +1,155 @@
+{
+  "schedule": "0 0 * * * *",
+  "mockMarkets": [
+    {
+      "title": "2024 US Presidential Election Winner",
+      "description": "Which candidate will win the 2024 United States Presidential Election and become the 47th President of the United States?",
+      "options": ["Donald Trump", "Kamala Harris", "Other"],
+      "verificationUrl": "https://www.fec.gov/introduction-campaign-finance/election-results-and-voting-information/",
+      "resolvesAt": "2024-11-06T00:00:00Z"
+    },
+    {
+      "title": "Argentina Wins 2022 FIFA World Cup",
+      "description": "Will Argentina win the 2022 FIFA World Cup in Qatar, defeating all opponents in the tournament?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/qatar2022",
+      "resolvesAt": "2022-12-18T00:00:00Z"
+    },
+    {
+      "title": "UK Prime Minister on January 1, 2024",
+      "description": "Who will be serving as the Prime Minister of the United Kingdom on January 1, 2024?",
+      "options": ["Rishi Sunak", "Keir Starmer", "Other"],
+      "verificationUrl": "https://www.gov.uk/government/history/past-prime-ministers",
+      "resolvesAt": "2024-01-01T00:00:00Z"
+    },
+    {
+      "title": "Twitter Rebrands to X in 2023",
+      "description": "Will Twitter officially rebrand to 'X' and change its primary branding during 2023?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://blog.x.com/en_us/topics/company/2023/twitter-officially-rebrands-to-x",
+      "resolvesAt": "2023-07-24T00:00:00Z"
+    },
+    {
+      "title": "Apple Releases Vision Pro Before 2024",
+      "description": "Will Apple release the Apple Vision Pro headset to consumers before the end of 2023?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://www.apple.com/newsroom/2024/01/apple-vision-pro-available-february-2/",
+      "resolvesAt": "2023-12-31T00:00:00Z"
+    },
+    {
+      "title": "2023 NBA Championship Winner",
+      "description": "Which team will win the 2023 NBA Finals and be crowned NBA Champions?",
+      "options": ["Denver Nuggets", "Miami Heat", "Other"],
+      "verificationUrl": "https://www.nba.com/news/2023-nba-finals-nuggets-heat",
+      "resolvesAt": "2023-06-13T00:00:00Z"
+    },
+    {
+      "title": "OpenAI CEO Sam Altman Fired in 2023",
+      "description": "Will Sam Altman be removed as CEO of OpenAI during 2023?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://openai.com/blog/openai-announces-leadership-transition",
+      "resolvesAt": "2023-11-17T00:00:00Z"
+    },
+    {
+      "title": "Queen Elizabeth II Passes Away in 2022",
+      "description": "Will Queen Elizabeth II pass away during the year 2022?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://www.royal.uk/news-and-activity/2022-09-08/statement-from-his-majesty-the-king",
+      "resolvesAt": "2022-09-08T00:00:00Z"
+    },
+    {
+      "title": "US Inflation Rate Above 5% in December 2023",
+      "description": "Will the US Consumer Price Index (CPI) inflation rate be above 5% year-over-year in December 2023?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://www.bls.gov/news.release/cpi.nr0.htm",
+      "resolvesAt": "2024-01-11T00:00:00Z"
+    },
+    {
+      "title": "Russia Invades Ukraine in 2022",
+      "description": "Will Russia launch a full-scale military invasion of Ukraine in 2022?",
+      "options": ["Yes", "No"],
+      "verificationUrl": "https://www.un.org/press/en/2022/sc14808.doc.htm",
+      "resolvesAt": "2022-02-24T00:00:00Z"
+    },
+    {
+      "title": "Will the Boston Celtics make the 2026 NBA Playoffs?",
+      "description": "This market predicts whether the Boston Celtics will secure a playoff berth in the 2025-2026 NBA season. The market resolves to YES if the Celtics finish in the top 10 of the Eastern Conference and either secure a top-6 seed or win their play-in games to advance to the playoffs. The market resolves to NO if they fail to make the playoffs by the end of the regular season and play-in tournament.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.nba.com/playoffs/2026",
+      "resolvesAt": "2026-04-20"
+    },
+    {
+      "title": "Will Apple announce a new iPhone model in March 2026?",
+      "description": "This market predicts whether Apple Inc. will officially announce a new iPhone model during the month of March 2026. This includes any special events, press releases, or official announcements on Apple's website. Product leaks or rumors do not count; only official announcements from Apple qualify for a YES resolution.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.apple.com/newsroom/",
+      "resolvesAt": "2026-04-01"
+    },
+    {
+      "title": "Winner of the 2026 French Presidential Election First Round",
+      "description": "This market predicts which candidate will receive the most votes in the first round of the 2026 French Presidential Election scheduled for April 2026. The market will resolve based on official results published by the French Interior Ministry.",
+      "options": [
+        "Marine Le Pen",
+        "Emmanuel Macron",
+        "Jean-Luc Mélenchon",
+        "Other Candidate"
+      ],
+      "verificationUrl": "https://www.interieur.gouv.fr/Elections/Les-resultats/Presidentielles",
+      "resolvesAt": "2026-04-12"
+    },
+    {
+      "title": "Will Bitcoin price exceed $120,000 before June 2026?",
+      "description": "This market predicts whether the price of Bitcoin (BTC) will reach or exceed $120,000 USD on any major cryptocurrency exchange (Coinbase, Binance, or Kraken) at any point before June 1, 2026, 00:00 UTC. The market resolves to YES if this price threshold is reached at least once, and NO otherwise.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.coinbase.com/price/bitcoin",
+      "resolvesAt": "2026-06-01"
+    },
+    {
+      "title": "Will 'Dune: Part Three' be officially greenlit by May 2026?",
+      "description": "This market predicts whether Warner Bros. or Legendary Entertainment will officially announce that 'Dune: Part Three' (Dune: Messiah) has been greenlit for production by May 31, 2026. An official announcement from the studio, director Denis Villeneuve, or trade publications like Variety or The Hollywood Reporter confirming production approval will resolve this market to YES.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.hollywoodreporter.com/movies/movie-news/",
+      "resolvesAt": "2026-06-01"
+    },
+    {
+      "title": "Will the Federal Reserve cut interest rates in March 2026?",
+      "description": "This market predicts whether the U.S. Federal Reserve will announce a reduction in the federal funds rate target range at their FOMC meeting scheduled for March 17-18, 2026. The market resolves to YES if the Fed announces any rate cut of any magnitude, and NO if rates are held steady or increased.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.federalreserve.gov/newsevents/pressreleases.htm",
+      "resolvesAt": "2026-03-18"
+    },
+    {
+      "title": "Which team will win the 2026 UEFA Champions League Final?",
+      "description": "This market predicts which team will win the 2025-2026 UEFA Champions League Final scheduled for May 30, 2026, at the Allianz Arena in Munich. The market resolves based on the official result after 90 minutes plus extra time and penalty kicks if necessary.",
+      "options": [
+        "Real Madrid",
+        "Manchester City",
+        "Bayern Munich",
+        "Other Team"
+      ],
+      "verificationUrl": "https://www.uefa.com/uefachampionsleague/match/",
+      "resolvesAt": "2026-05-31"
+    },
+    {
+      "title": "Will Tesla deliver more than 500,000 vehicles in Q1 2026?",
+      "description": "This market predicts whether Tesla will report delivering more than 500,000 total vehicles (combined across all models) in the first quarter of 2026. The market resolves based on Tesla's official Q1 2026 production and delivery report, typically released in early April.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://ir.tesla.com/press-release",
+      "resolvesAt": "2026-04-05"
+    },
+    {
+      "title": "Will the UK hold a general election before August 2026?",
+      "description": "This market predicts whether the United Kingdom will hold a general parliamentary election before August 1, 2026. The market resolves to YES if an election is officially held (voting day occurs) before this date, and NO otherwise. The announcement of an election does not count; the actual voting must take place.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.electoralcommission.org.uk/who-we-are-and-what-we-do/elections-and-referendums/upcoming-elections-and-referendums",
+      "resolvesAt": "2026-08-01"
+    },
+    {
+      "title": "Will SpaceX successfully launch Starship to orbit in March 2026?",
+      "description": "This market predicts whether SpaceX will successfully launch its Starship vehicle to orbital velocity during March 2026. Success is defined as the Starship upper stage reaching orbital velocity (approximately 7.8 km/s) without catastrophic failure. The launch must occur between March 1-31, 2026, and be confirmed by SpaceX or credible space reporting sources.",
+      "options": ["YES", "NO"],
+      "verificationUrl": "https://www.spacex.com/launches/",
+      "resolvesAt": "2026-04-02"
+    }
+  ]
+}

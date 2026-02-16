@@ -1,6 +1,6 @@
-# Market Generation workflow
+# Market Resolution checks workflow
 
-This workflow will fetch new prediction marks using Claude AI update the database + contracts.
+This workflow will check the database for markets that has ended, will use Claude AI for resolution and update the contracts. Database is updated separately.
 
 ## 1. Update .env file
 
@@ -16,7 +16,7 @@ CLAUDE_API_KEY_ALL=sk........
 If `bun` is not already installed, see https://bun.com/docs/installation for installing in your environment.
 
 ```bash
-cd market-generation && npm install
+cd market-resolution-checks && npm install
 ```
 
 ## 3. Simulate the workflow
@@ -24,5 +24,5 @@ cd market-generation && npm install
 Run the command from <b>project root directory</b>
 
 ```bash
-cre workflow simulate ./market-generation --target=staging-settings
+cre workflow simulate ./market-resolution-checks --target=staging-settings
 ```

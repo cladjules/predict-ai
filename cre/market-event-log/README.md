@@ -1,6 +1,6 @@
-# Market Generation workflow
+# Market Event log workflow
 
-This workflow will fetch new prediction marks using Claude AI update the database + contracts.
+This workflow will mark the market as resolved in the Database once the event Log has been received.
 
 ## 1. Update .env file
 
@@ -8,7 +8,6 @@ You need to add a private key to env file. This is required to write to the cont
 
 ```
 CRE_ETH_PRIVATE_KEY=0000000000000000000000000000000000000000000000000000000000000001
-CLAUDE_API_KEY_ALL=sk........
 ```
 
 ## 2. Install dependencies
@@ -16,7 +15,7 @@ CLAUDE_API_KEY_ALL=sk........
 If `bun` is not already installed, see https://bun.com/docs/installation for installing in your environment.
 
 ```bash
-cd market-generation && npm install
+cd market-event-log && npm install
 ```
 
 ## 3. Simulate the workflow
@@ -24,5 +23,5 @@ cd market-generation && npm install
 Run the command from <b>project root directory</b>
 
 ```bash
-cre workflow simulate ./market-generation --target=staging-settings
+cre workflow simulate ./market-event-log --target=staging-settings
 ```
