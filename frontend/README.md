@@ -2,8 +2,7 @@
 
 Frontend application for interacting with prediction markets. Connects to the backend and smart contracts.
 
-Quickstart
-----------
+## Quickstart
 
 ```bash
 cd frontend

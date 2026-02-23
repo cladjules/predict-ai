@@ -1,14 +1,12 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient, HTTPRequestContext } from "@x402/core/server";
 import { createPaywall } from "@x402/paywall";
 import { evmPaywall } from "@x402/paywall/evm";
 import { exact } from "x402/schemes";
-
-// Load environment variables
-dotenv.config();
+import { createJWT } from "./utils";
 
 const app = express();
 const PORT = process.env.PORT || 4021;
@@ -26,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Your receiving wallet address
-const payTo = process.env.WALLET_ADDRESS || "0xYourAddress";
+const payTo = process.env.WALLET_ADDRESS;
 
 // Create facilitator client (testnet by default)
 const facilitatorUrl =
@@ -35,9 +33,14 @@ const facilitatorClient = new HTTPFacilitatorClient({
   url: facilitatorUrl,
 });
 
-// Network: Base Sepolia for testnet, Base mainnet for production
-const network = (process.env.NETWORK ||
-  "eip155:84532") as `${string}:${string}`; // Base Sepolia
+const network = process.env.NETWORK as `${string}:${string}`;
+
+if (!payTo || !network) {
+  console.error(
+    "Error: WALLET_ADDRESS or NETWORK is not set in environment variables.",
+  );
+  process.exit(1);
+}
 
 // Create resource server and register EVM scheme
 const server = new x402ResourceServer(facilitatorClient).register(
@@ -49,8 +52,8 @@ const server = new x402ResourceServer(facilitatorClient).register(
 const paywall = createPaywall()
   .withNetwork(evmPaywall)
   .withConfig({
-    appName: process.env.APP_NAME || "X402 Payment Server",
-    testnet: network === "eip155:84532", // true for Base Sepolia
+    appName: process.env.APP_NAME,
+    testnet: process.env.NETWORK_IS_TESTNET === "true",
   })
   .build();
 
@@ -132,7 +135,7 @@ curl -X POST http://localhost:${PORT}/predict \\
 });
 
 // Protected route: Prediction endpoint
-app.post("/predict", (req, res) => {
+app.post("/predict", async (req, res) => {
   const { marketId, outcome, amount } = req.body;
 
   // Validate required fields
@@ -179,21 +182,49 @@ app.post("/predict", (req, res) => {
     timestamp: new Date().toISOString(),
   };
 
+  // CRE HTTP Trigger JWT Auth per Chainlink docs
+  const creUrl = process.env.CRE_TRIGGER_URL;
+
+  const creParams = {
+    id: `pred_${marketId}_${payer}_${Date.now()}`,
+    jsonrpc: "2.0",
+    method: "workflows.execute",
+    params: {
+      input: prediction,
+      workflow: { workflowID: process.env.CRE_WORKFLOW_ID },
+    },
+  };
+
+  const jwt = await createJWT(
+    creParams,
+    process.env.WALLET_PRIVATE_KEY as `0x${string}`,
+  );
+
+  const response = await (
+    await fetch(creUrl!, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify(creParams),
+    })
+  ).json();
+
+  if (response.error) {
+    console.error("Error triggering CRE workflow:", response.error);
+    return res.status(500).json({
+      error: "Failed to trigger CRE workflow",
+      details: response.error?.message,
+    });
+  } else {
+    console.log("CRE workflow triggered successfully:", response);
+  }
+
   res.json({
     success: true,
     prediction,
     message: "Prediction generated successfully",
-  });
-});
-
-// Protected route: Premium data
-app.get("/data", (req, res) => {
-  res.json({
-    data: {
-      content: "This is premium data that required payment to access.",
-      features: ["Real-time updates", "Historical data", "Advanced analytics"],
-      timestamp: new Date().toISOString(),
-    },
   });
 });
 

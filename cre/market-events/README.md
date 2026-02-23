@@ -2,8 +2,7 @@
 
 Event-driven workflow handling payments and on-chain events.
 
-Quickstart
-----------
+## Quickstart
 
 ```bash
 cd cre/market-events
@@ -13,8 +12,7 @@ npm run deploy      # deploy staging
 npm run deploy:prod # deploy production
 ```
 
-Configuration
--------------
+## Configuration
 
 - `config.staging.json` and `config.production.json` contain `chainSelectorName`, `contractAddress`, and `authorizedEVMAddress`.
 - The HTTP trigger authenticates X402 payment notifications before forwarding reports to the KeystoneForwarder.

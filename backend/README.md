@@ -2,8 +2,7 @@
 
 Backend services for Predict AI. Contains X402 payment server and integration helpers used by CRE workflows.
 
-Quickstart
-----------
+## Quickstart
 
 ```bash
 cd backend/test-x402

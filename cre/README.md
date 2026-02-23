@@ -22,7 +22,6 @@ npm run simulate
 
 ## Deploy & Simulate
 
-Simulation & Deployment
------------------------
+## Simulation & Deployment
 
 Use the provided npm scripts to simulate workflows locally (`npm run simulate`) and `cre workflow deploy` or `npm run deploy` to deploy. Configure `config.staging.json` / `config.production.json` per workflow before deploying.

@@ -6,8 +6,7 @@ AI-powered prediction market platform that generates and resolves prediction mar
 
 AI-powered prediction market platform that generates and resolves prediction markets using Claude AI and integrates with Chainlink CRE for secure on-chain reporting.
 
-Quickstart
-----------
+## Quickstart
 
 Install top-level dependencies and subproject deps:
 
@@ -26,8 +25,7 @@ npx hardhat compile
 npx hardhat test
 ```
 
-Repository layout
------------------
+## Repository layout
 
 - `contracts/` — Solidity contracts, tests and Hardhat config
 - `cre/` — Chainlink CRE workflows (market-admin, market-events)
