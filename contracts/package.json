@@ -1,0 +1,25 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "npx hardhat test",
+    "compile": "npx hardhat compile",
+    "deploy:local": "npx hardhat ignition deploy ignition/modules/PredictionMarket.ts",
+    "deploy:baseSepolia": "npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseSepolia --verify",
+    "deploy:sepolia": "npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network sepolia",
+    "clean": "npx hardhat clean",
+    "size": "node -e \"const fs = require('fs'); const artifact = JSON.parse(fs.readFileSync('artifacts/contracts/PredictionMarket.sol/PredictionMarket.json', 'utf8')); const bytecodeSize = (artifact.bytecode.length - 2) / 2; console.log('Deployed bytecode size:', bytecodeSize, 'bytes'); console.log('Contract is', bytecodeSize < 24576 ? 'DEPLOYABLE ✓' : 'TOO LARGE ✗');\""
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.7",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.2",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@types/node": "^22.19.11",
+    "dotenv": "^17.3.1",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.1.9",
+    "typescript": "~5.8.0",
+    "viem": "^2.46.2"
+  }
+}

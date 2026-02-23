@@ -1,0 +1,8 @@
+{
+  "name": "market-events",
+  "version": "1.0.0",
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.1.1",
+    "viem": "^2.46.2"
+  }
+}
