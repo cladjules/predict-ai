@@ -1,47 +1,22 @@
 # Market Admin Workflow
 
-Consolidated workflow for administrative market operations.
+Scheduled administration workflow: market generation and resolution checks using Claude AI.
 
-## Features
-
-### Market Generation
-
-- **Trigger**: Cron schedule (configurable)
-- **Function**: Generates new prediction markets using Claude AI
-- **Frequency**: Every hour (staging), every 12 hours (production)
-- **Output**: 10 diverse prediction markets
-
-### Market Resolution
-
-- **Trigger**: Cron schedule (configurable)
-- **Function**: Checks and resolves completed markets using Claude AI
-- **Frequency**: Every 30 minutes (staging), every hour (production)
-- **Output**: Resolution outcomes for eligible markets
-
-## Configuration
-
-### Schedules
-
-- `generationSchedule`: Cron expression for market generation
-- `resolutionSchedule`: Cron expression for market resolution checks
-- `mockMarkets`: Array of mock markets for testing (staging only)
-
-### Secrets
-
-- `CLAUDE_API_KEY`: API key for Claude AI (Anthropic)
-
-## Deployment
+Quickstart
+----------
 
 ```bash
-# Deploy to staging
-cre workflow deploy staging-settings
-
-# Deploy to production
-cre workflow deploy production-settings
+cd cre/market-admin
+npm install
+npm run simulate    # run staging simulation
+npm run deploy      # deploy staging
+npm run deploy:prod # deploy production
 ```
 
-## TODO
+Configuration
+-------------
 
-- Implement database API for storing generated markets
-- Implement on-chain resolution trigger via CRE capabilities
-- Add monitoring and alerting for failed generations/resolutions
+- `config.staging.json` and `config.production.json` contain schedules and mock data.
+- `CLAUDE_API_KEY` should be set via `cre secrets` or environment variables.
+
+See `workflow.yaml` for CRE configuration and `main.ts` for trigger logic.

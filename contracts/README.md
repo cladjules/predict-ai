@@ -1,83 +1,47 @@
 # Prediction Market Smart Contracts
 
-Decentralized prediction market contracts built with Solidity and Hardhat 3. Supports both **native ETH** and **ERC20 tokens** (USDC) for payments.
+Smart contracts for the Predict AI platform. Built with Solidity and Hardhat.
+
+## Quickstart
+
+```bash
+cd contracts
+npm install
+npx hardhat compile
+npx hardhat test
+```
 
 ## Overview
 
-This project contains smart contracts for a fully decentralized prediction market platform where users can:
+The primary contract is `PredictionMarket.sol`. It supports ETH and ERC20 payments, time-bounded markets, and on-chain recording of predictions submitted via Chainlink CRE forwarders.
 
-- Create prediction markets with timed betting periods
-- Place bets on different outcomes using **ETH or USDC**
-- Automatically receive winnings when markets are resolved
-- All payouts happen automatically with atomicity guarantees
-- Full re-entrancy protection via Checks-Effects-Interactions pattern
+## Security & Access Control
 
-## Contracts
+- `PredictionMarket` inherits `ReceiverTemplate`, which includes OpenZeppelin `Ownable`.
+- The contract requires a KeystoneForwarder address at construction for CRE reports.
+- Owner-only restrictions are used for sensitive operations; if you expect public access for user-facing flows (e.g. `predict`), update access modifiers accordingly.
 
-### PredictionMarket.sol
+## Build & Deployment
 
-The main contract that handles all prediction market functionality:
+Set required environment variables (see `.env.example`) then deploy with ignition or your preferred scripts:
 
-**Key Features:**
+```bash
+# compile
+npx hardhat compile
 
-- **Multi-Token Support**: Markets accept either native ETH or any ERC20 token (USDC, DAI, etc.)
-- **Create Markets**: Anyone can create a new prediction market with outcome count and time windows
-- **Timed Betting**: Markets have defined start and finish times for betting
-- **Place Predictions**: Users can bet on any outcome during the betting period
-- **Automatic Payouts**: When a market resolves, all winners automatically receive their proportional share
-- **Atomic Resolution**: Either all payouts succeed or entire resolution reverts (no partial payouts)
-- **Re-entrancy Protection**: Built-in protection via Checks-Effects-Interactions pattern
-- **Transparent Pools**: All betting pools and totals are publicly visible on-chain
-- **Gas Optimized**: Uses uint8 for outcomes, no string storage (data lives in DB), solidity optimizer enabled
+# example ignition deploy (use network flag)
+npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network <network>
+```
 
-**Core Functions:**
+## Deployment
 
-- `createMarket(outcomeCount, startsAt, finishesAt, paymentToken)` - Create a new prediction market (ETH or ERC20)
-- `predict(marketId, outcome, amount)` - Place a bet on a specific outcome (payable for ETH, requires approval for ERC20)
-- `predictFor(predictor, marketId, outcome, amount)` - Place a bet on behalf of a user (no payment collected, assumes payment handled separately)
-- `resolveMarket(marketId, winningOutcome)` - Resolve market and auto-payout all winners (atomic)
-- `claimWinnings(predictionId)` - Manual claim function for users (same payout logic)
-- `calculatePotentialWinnings(marketId, outcome, amount)` - Preview potential payout **before** placing bet
-- `calculateWinnings(predictionId)` - View actual winnings for an existing prediction
-
-**View Functions:**
-
-- `getMarket(marketId)` - Get complete market details
-- `getPrediction(predictionId)` - Get prediction details
-- `getUserPredictions(address)` - Get all predictions by a user
-- `getMarketPredictions(marketId)` - Get all predictions for a market
-
-### Chainlink CRE Integration
-
-**Direct Integration**: PredictionMarket inherits from `ReceiverTemplate` to receive prediction data directly from Chainlink Runtime Environment (CRE) workflows.
-
-**Architecture Flow:**
-
-1. User pays via X402 payment processor (ETH or USDC)
-2. X402 backend receives payment confirmation
-3. X402 triggers CRE workflow with prediction data
-4. CRE workflow validates and sends signed report to KeystoneForwarder
-5. KeystoneForwarder validates signatures and calls `PredictionMarket.onReport()`
-6. PredictionMarket decodes data via `_processReport()` and records prediction on-chain
-7. Payment is already collected off-chain, so no on-chain payment required
-
-**Security:**
-
-- Inherits `ReceiverTemplate` with built-in forwarder validation
-- Optional workflow ID and author validation via `setExpectedWorkflowId()` and `setExpectedAuthor()`
-- Constructor requires KeystoneForwarder address for security
-- ERC165 interface support for protocol compatibility
-- All OpenZeppelin Ownable functionality available (owner controls, emergency withdrawals)
-
-**Deployment:**
+Deploy with the KeystoneForwarder address:
 
 ```solidity
-// Deploy with KeystoneForwarder address (required)
 PredictionMarket market = new PredictionMarket(keystoneForwarderAddress);
 ```
 
 For Base Sepolia/Mainnet forwarder addresses, see [Chainlink Forwarder Directory](https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory).
-
 **Integration:**
 
 See `/cre/market-payment-received/` for the CRE workflow implementation.

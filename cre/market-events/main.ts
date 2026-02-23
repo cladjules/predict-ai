@@ -32,7 +32,7 @@ const initWorkflow = (config: Config) => {
         authorizedKeys: [
           {
             type: "KEY_TYPE_ECDSA_EVM",
-            publicKey: config.publicKey,
+            publicKey: config.authorizedEVMAddress,
           },
         ],
       }),

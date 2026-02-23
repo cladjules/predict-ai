@@ -2,18 +2,24 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 /**
  * Deployment module for PredictionMarket contract
- *
- * This contract supports both ETH and ERC20 tokens (like USDC).
- * Markets are created with a payment token address:
- * - address(0) for native ETH
- * - Token address for ERC20 (e.g., USDC)
- *
- * Base Sepolia USDC: 0x036CbD53842c5426634e7929541eC2318f3dCF7e
- * Base Mainnet USDC: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
  */
-
 const PredictionMarketModule = buildModule("PredictionMarketModule", (m) => {
-  const predictionMarket = m.contract("PredictionMarket");
+  // Forwarder addresses for CRE here: https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory-ts
+  // We choose the constructor args based on the active network.
+
+  const creForwarders: Record<string, string> = {
+    base: "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+    baseSepolia: "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+  };
+
+  const networkName = process.env.HARDHAT_NETWORK ?? "";
+
+  const forwarderAddress = creForwarders[networkName];
+  if (!forwarderAddress) {
+    throw new Error(`No CRE forwarder configured for network: ${networkName}`);
+  }
+
+  const predictionMarket = m.contract("PredictionMarket", [forwarderAddress]);
 
   return { predictionMarket };
 });

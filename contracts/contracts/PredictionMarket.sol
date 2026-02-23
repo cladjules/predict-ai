@@ -118,7 +118,7 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 _startsAt,
         uint256 _finishesAt,
         address _paymentToken
-    ) external returns (uint256) {
+    ) external onlyOwner returns (uint256) {
         require(_outcomeCount >= 2, "Must have at least 2 outcomes");
         require(_startsAt >= block.timestamp, "Start time must be in future");
         require(_finishesAt > _startsAt, "Finish time must be after start");
@@ -201,7 +201,7 @@ contract PredictionMarket is ReceiverTemplate {
     function resolveMarket(
         uint256 _marketId,
         uint8 _winningOutcome
-    ) external marketExists(_marketId) marketNotResolved(_marketId) {
+    ) external onlyOwner marketExists(_marketId) marketNotResolved(_marketId) {
         require(
             msg.sender == markets[_marketId].creator,
             "Only creator can resolve"
@@ -291,6 +291,7 @@ contract PredictionMarket is ReceiverTemplate {
     )
         external
         view
+        marketExists(_marketId)
         marketExists(_marketId)
         returns (
             uint256 id,

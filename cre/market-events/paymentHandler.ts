@@ -14,7 +14,7 @@ import { getNetwork } from "./utils";
 export type Config = {
   chainSelectorName: string;
   contractAddress: string;
-  publicKey: string;
+  authorizedEVMAddress: string;
 };
 
 export const onHttpTrigger = (
