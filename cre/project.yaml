@@ -35,6 +35,6 @@ staging-settings:
 production-settings:
   rpcs:
     - chain-name: ethereum-mainnet
-      url: https://ethereum-rpc.publicnode.com
+      url: https://ethereum-sepolia-rpc.publicnode.com
     - chain-name: ethereum-mainnet-base-1
-      url: https://base-rpc.publicnode.com
+      url: https://base-sepolia-rpc.publicnode.com
