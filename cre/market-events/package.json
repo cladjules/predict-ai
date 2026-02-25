@@ -1,0 +1,13 @@
+{
+  "name": "market-events",
+  "version": "1.0.0",
+  "scripts": {
+    "simulate": "cd .. && cre workflow simulate market-events -T staging-settings",
+    "simulate:prod": "cd .. && cre workflow simulate market-events -T production-settings",
+    "deploy": "cd .. && cre workflow deploy market-events -T staging-settings",
+    "deploy:prod": "cd .. && cre workflow deploy market-events -T production-settings"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.1.1"
+  }
+}

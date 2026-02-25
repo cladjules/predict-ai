@@ -1,0 +1,5 @@
+{
+  "generationSchedule": "0 0 * * * *",
+  "resolutionSchedule": "0 30 * * * *",
+  "mockMarkets": []
+}

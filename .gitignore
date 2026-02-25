@@ -2,3 +2,7 @@
 node_modules
 dist
 tmp*
+.cre_build_tmp.js
+journal.jsonl
+artifacts/
+build-info/
