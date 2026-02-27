@@ -15,7 +15,11 @@ export type Config = {
   chainSelectorName: string;
   contractAddress: string;
   authorizedEVMAddress: string;
+  backendUrl?: string;
 };
+
+// Backend calls removed - now handled by eventHandler listening to PredictionPlaced events
+// const storePredictionInBackend = ...
 
 export const onHttpTrigger = (
   runtime: Runtime<Config>,
@@ -23,6 +27,17 @@ export const onHttpTrigger = (
 ): string => {
   if (!payload.input || payload.input.length === 0) {
     return "Empty request";
+  }
+
+  const secretResult = runtime.getSecret({
+    id: "BACKEND_API_KEY",
+  });
+  const secret = secretResult.result();
+  const backendApiKey = secret.value;
+
+  if (!backendApiKey) {
+    runtime.log("ERROR: BACKEND_API_KEY not found in secrets");
+    return "Error: Missing API key";
   }
 
   runtime.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -68,13 +83,15 @@ export const onHttpTrigger = (
   runtime.log(`[Step 3] Encoding prediction data for on-chain write...`);
 
   // Encode prediction data as ABI parameters for PredictionMarket._processReport()
-  // Order must match: address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken
+  // Format: (uint8 opType, address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken)
+  // opType 0 = Prediction operation
   // Note: x402TxHash and timestamp kept in backend only for gas efficiency
   const predictionData = encodeAbiParameters(
     parseAbiParameters(
-      "address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken",
+      "uint8 opType, address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken",
     ),
     [
+      0, // opType 0 for prediction
       prediction.predictor,
       prediction.marketId,
       prediction.outcome,
@@ -112,6 +129,12 @@ export const onHttpTrigger = (
     runtime.log(
       `[Step 6] [SUCCESS] Market ${prediction.marketId} - Outcome ${prediction.outcome} - Amount ${prediction.amount}`,
     );
+
+    // Backend database sync now handled by eventHandler listening to PredictionPlaced event
+    runtime.log(
+      `[Step 7] Database sync will be handled by eventHandler on PredictionPlaced event`,
+    );
+
     runtime.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
     return txHash;
   }
