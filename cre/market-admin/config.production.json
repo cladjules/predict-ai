@@ -1,5 +1,9 @@
 {
+  "chainSelectorName": "ethereum-mainnet-base-1",
+  "contractAddress": "0x",
+  "creatorAddress": "0x",
+  "paymentToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "generationSchedule": "0 0 * * * *",
   "resolutionSchedule": "0 30 * * * *",
-  "mockMarkets": []
+  "backendUrl": "https://your-backend-url.com"
 }

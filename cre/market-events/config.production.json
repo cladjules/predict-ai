@@ -1,5 +1,6 @@
 {
   "chainSelectorName": "ethereum-mainnet-base-1",
   "contractAddress": "0x",
-  "authorizedEVMAddress": "0x"
+  "authorizedEVMAddress": "0x",
+  "backendUrl": "https://your-backend-url.com"
 }

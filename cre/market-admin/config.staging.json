@@ -1,48 +1,9 @@
 {
+  "chainSelectorName": "ethereum-testnet-sepolia-base-1",
+  "contractAddress": "0xe2d1AaAEeea816178EF71A151aeA84aC0f6F2d99",
+  "creatorAddress": "0xe96F62C154967A69A13a0e43D5CA9b05f04673b6",
+  "paymentToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   "generationSchedule": "0 0 * * * *",
   "resolutionSchedule": "0 30 * * * *",
-  "mockMarkets": [
-    {
-      "title": "2024 US Presidential Election Winner",
-      "description": "Which candidate will win the 2024 United States Presidential Election and become the 47th President of the United States?",
-      "options": ["Donald Trump", "Kamala Harris", "Other"],
-      "verificationUrl": "https://www.fec.gov/introduction-campaign-finance/election-results-and-voting-information/",
-      "resolvesAt": "2024-11-06T00:00:00Z"
-    },
-    {
-      "title": "Argentina Wins 2022 FIFA World Cup",
-      "description": "Will Argentina win the 2022 FIFA World Cup in Qatar, defeating all opponents in the tournament?",
-      "options": ["Yes", "No"],
-      "verificationUrl": "https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/qatar2022",
-      "resolvesAt": "2022-12-18T00:00:00Z"
-    },
-    {
-      "title": "UK Prime Minister on January 1, 2024",
-      "description": "Who will be serving as the Prime Minister of the United Kingdom on January 1, 2024?",
-      "options": ["Rishi Sunak", "Keir Starmer", "Other"],
-      "verificationUrl": "https://www.gov.uk/government/history/past-prime-ministers",
-      "resolvesAt": "2024-01-01T00:00:00Z"
-    },
-    {
-      "title": "Twitter Rebrands to X in 2023",
-      "description": "Will Twitter officially rebrand to 'X' and change its primary branding during 2023?",
-      "options": ["Yes", "No"],
-      "verificationUrl": "https://blog.x.com/en_us/topics/company/2023/twitter-officially-rebrands-to-x",
-      "resolvesAt": "2023-07-24T00:00:00Z"
-    },
-    {
-      "title": "Will the Boston Celtics make the 2026 NBA Playoffs?",
-      "description": "This market predicts whether the Boston Celtics will secure a playoff berth in the 2025-2026 NBA season.",
-      "options": ["YES", "NO"],
-      "verificationUrl": "https://www.nba.com/playoffs/2026",
-      "resolvesAt": "2026-04-20"
-    },
-    {
-      "title": "Will Bitcoin price exceed $120,000 before June 2026?",
-      "description": "This market predicts whether the price of Bitcoin (BTC) will reach or exceed $120,000 USD on any major cryptocurrency exchange before June 1, 2026.",
-      "options": ["YES", "NO"],
-      "verificationUrl": "https://www.coinbase.com/price/bitcoin",
-      "resolvesAt": "2026-06-01"
-    }
-  ]
+  "backendUrl": "http://localhost:4021"
 }

@@ -19,6 +19,14 @@ const initWorkflow = (config: Config) => {
   }
 
   const evmClient = new EVMClient(network.chainSelector.selector);
+
+  // Event hashes for all PredictionMarket contract events
+  const marketCreatedEventHash = keccak256(
+    toBytes("MarketCreated(uint256,address,uint8,uint256,uint256,address)"),
+  );
+  const predictionPlacedEventHash = keccak256(
+    toBytes("PredictionPlaced(uint256,uint256,address,uint8,uint256,uint256)"),
+  );
   const marketResolvedEventHash = keccak256(
     toBytes("MarketResolved(uint256,uint8,uint256,uint256)"),
   );
@@ -38,11 +46,19 @@ const initWorkflow = (config: Config) => {
       }),
       onHttpTrigger,
     ),
-    // Event Log Trigger for MarketResolved events
+    // Event Log Trigger for all PredictionMarket events (MarketCreated, PredictionPlaced, MarketResolved)
     handler(
       evmClient.logTrigger({
         addresses: [hexToBase64(config.contractAddress)],
-        topics: [{ values: [hexToBase64(marketResolvedEventHash)] }],
+        topics: [
+          {
+            values: [
+              hexToBase64(marketCreatedEventHash),
+              hexToBase64(predictionPlacedEventHash),
+              hexToBase64(marketResolvedEventHash),
+            ],
+          },
+        ],
         confidence: "CONFIDENCE_LEVEL_FINALIZED",
       }),
       onLogTrigger,

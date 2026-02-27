@@ -2,6 +2,7 @@
   "name": "market-events",
   "version": "1.0.0",
   "scripts": {
+    "test:payment": "cd .. && cre workflow simulate market-events -T staging-settings --trigger http --input-file market-events/test-payload.json",
     "simulate": "cd .. && cre workflow simulate market-events -T staging-settings",
     "simulate:prod": "cd .. && cre workflow simulate market-events -T production-settings",
     "deploy": "cd .. && cre workflow deploy market-events -T staging-settings",

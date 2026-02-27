@@ -66,27 +66,16 @@ contract PredictionMarketTest is Test {
         assertEq(marketId, 0);
         assertEq(market.marketCount(), 1);
 
-        (
-            uint256 id,
-            uint8 outcomeCount,
-            ,
-            uint256 totalPool,
-            uint256 startsAt,
-            uint256 finishesAt,
-            ,
-            bool isResolved,
-            address marketCreator,
-            address paymentToken
-        ) = market.getMarket(marketId);
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        assertEq(id, 0);
-        assertEq(outcomeCount, 2);
-        assertEq(totalPool, 0);
-        assertEq(startsAt, START_TIME);
-        assertEq(finishesAt, FINISH_TIME);
-        assertEq(isResolved, false);
-        assertEq(marketCreator, creator);
-        assertEq(paymentToken, address(0));
+        assertEq(marketData.id, 0);
+        assertEq(marketData.outcomeCount, 2);
+        assertEq(marketData.totalPool, 0);
+        assertEq(marketData.startsAt, START_TIME);
+        assertEq(marketData.finishesAt, FINISH_TIME);
+        assertEq(marketData.isResolved, false);
+        assertEq(marketData.creator, creator);
+        assertEq(marketData.paymentToken, address(0));
 
         vm.stopPrank();
     }
@@ -111,17 +100,13 @@ contract PredictionMarketTest is Test {
 
         assertEq(market.predictionCount(), 1);
 
-        (
-            uint256 predMarketId,
-            address predictor,
-            uint8 outcome,
-            uint256 amount
-        ) = market.getPrediction(0);
+        PredictionMarket.Prediction memory predictionData = market
+            .getPrediction(0);
 
-        assertEq(predMarketId, marketId);
-        assertEq(predictor, user1);
-        assertEq(outcome, 0);
-        assertEq(amount, 1 ether);
+        assertEq(predictionData.marketId, marketId);
+        assertEq(predictionData.predictor, user1);
+        assertEq(predictionData.outcome, 0);
+        assertEq(predictionData.amount, 1 ether);
 
         vm.stopPrank();
     }
@@ -153,22 +138,11 @@ contract PredictionMarketTest is Test {
         market.predict{value: 1 ether}(marketId, 0, 0);
 
         // Check market pools
-        (
-            ,
-            ,
-            uint256[] memory outcomePools,
-            uint256 totalPool,
-            ,
-            ,
-            ,
-            ,
-            ,
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        ) = market.getMarket(marketId);
-
-        assertEq(totalPool, 6 ether);
-        assertEq(outcomePools[0], 3 ether); // Outcome 0 pool
-        assertEq(outcomePools[1], 3 ether); // Outcome 1 pool
+        assertEq(marketData.totalPool, 6 ether);
+        assertEq(marketData.outcomePools[0], 3 ether); // Outcome 0 pool
+        assertEq(marketData.outcomePools[1], 3 ether); // Outcome 1 pool
     }
 
     function testResolveMarket() public {
@@ -189,11 +163,10 @@ contract PredictionMarketTest is Test {
         vm.startPrank(creator);
         market.resolveMarket(marketId, 0); // Outcome 0 wins
 
-        (, , , , , , uint8 winningOutcome, bool isResolved, , ) = market
-            .getMarket(marketId);
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        assertEq(isResolved, true);
-        assertEq(winningOutcome, 0);
+        assertEq(marketData.isResolved, true);
+        assertEq(marketData.winningOutcome, 0);
 
         vm.stopPrank();
     }
@@ -408,11 +381,10 @@ contract PredictionMarketTest is Test {
         market.resolveMarket(marketId, 2); // Outcome 2 wins, but no one bet on it
 
         // Contract should handle this gracefully (no payouts to make)
-        (, , , , , , uint8 winningOutcome, bool isResolved, , ) = market
-            .getMarket(marketId);
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        assertEq(isResolved, true);
-        assertEq(winningOutcome, 2);
+        assertEq(marketData.isResolved, true);
+        assertEq(marketData.winningOutcome, 2);
     }
 
     // ==================== ERC20 (USDC) Payment Tests ====================
@@ -430,9 +402,9 @@ contract PredictionMarketTest is Test {
         assertEq(marketId, 0);
         assertEq(market.marketCount(), 1);
 
-        (, , , , , , , , , address paymentToken) = market.getMarket(marketId);
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        assertEq(paymentToken, address(usdc));
+        assertEq(marketData.paymentToken, address(usdc));
 
         vm.stopPrank();
     }
@@ -459,33 +431,19 @@ contract PredictionMarketTest is Test {
         vm.stopPrank();
 
         // Verify prediction
-        (
-            uint256 predMarketId,
-            address predictor,
-            uint8 outcome,
-            uint256 amount
-        ) = market.getPrediction(0);
+        PredictionMarket.Prediction memory predictionData = market
+            .getPrediction(0);
 
-        assertEq(predMarketId, marketId);
-        assertEq(predictor, user1);
-        assertEq(outcome, 0);
-        assertEq(amount, betAmount);
+        assertEq(predictionData.marketId, marketId);
+        assertEq(predictionData.predictor, user1);
+        assertEq(predictionData.outcome, 0);
+        assertEq(predictionData.amount, betAmount);
 
         // Verify market pool
-        (
-            ,
-            ,
-            uint256[] memory outcomePools,
-            uint256 totalPool,
-            ,
-            ,
-            ,
-            ,
-            ,
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        ) = market.getMarket(marketId);
-        assertEq(totalPool, betAmount);
-        assertEq(outcomePools[0], betAmount);
+        assertEq(marketData.totalPool, betAmount);
+        assertEq(marketData.outcomePools[0], betAmount);
     }
 
     function testMultiplePredictionsUSDC() public {
@@ -524,22 +482,12 @@ contract PredictionMarketTest is Test {
         vm.stopPrank();
 
         // Check market pools
-        (
-            ,
-            ,
-            uint256[] memory outcomePools,
-            uint256 totalPool,
-            ,
-            ,
-            ,
-            ,
-            ,
+        PredictionMarket.Market memory marketData = market.getMarket(marketId);
 
-        ) = market.getMarket(marketId);
-
-        assertEq(totalPool, bet1 + bet2 + bet3);
-        assertEq(outcomePools[0], bet1 + bet3); // 300 USDC
-        assertEq(outcomePools[1], bet2); // 300 USDC
+        assertEq(marketData.totalPool, bet1 + bet2 + bet3);
+        assertEq(marketData.outcomePools[0], bet1 + bet3); // 300 USDC
+        assertEq(marketData.outcomePools[1], bet2); // 300 USDC
+        assertEq(marketData.totalPool, bet1 + bet2 + bet3);
     }
 
     function testAutoPayoutOnResolveUSDC() public {
@@ -690,14 +638,16 @@ contract PredictionMarketTest is Test {
         vm.stopPrank();
 
         // Verify both markets work independently
-        (, , , uint256 ethTotalPool, , , , , , address ethToken) = market
-            .getMarket(ethMarketId);
-        (, , , uint256 usdcTotalPool, , , , , , address usdcToken) = market
-            .getMarket(usdcMarketId);
+        PredictionMarket.Market memory marketEth = market.getMarket(
+            ethMarketId
+        );
+        PredictionMarket.Market memory marketUsdc = market.getMarket(
+            usdcMarketId
+        );
 
-        assertEq(ethTotalPool, 1 ether);
-        assertEq(ethToken, address(0));
-        assertEq(usdcTotalPool, usdcBet);
-        assertEq(usdcToken, address(usdc));
+        assertEq(marketEth.totalPool, 1 ether);
+        assertEq(marketEth.paymentToken, address(0));
+        assertEq(marketUsdc.totalPool, usdcBet);
+        assertEq(marketUsdc.paymentToken, address(usdc));
     }
 }
