@@ -283,7 +283,9 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
           .writeReport(runtime, {
             receiver: contractAddress,
             report: reportResponse,
-            gasConfig: {},
+            gasConfig: {
+              gasLimit: "500000",
+            },
           })
           .result();
 

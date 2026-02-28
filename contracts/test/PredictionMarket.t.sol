@@ -30,7 +30,6 @@ contract PredictionMarketTest is Test {
     address public user3 = address(4);
     address public mockForwarder = address(0x999); // Mock Chainlink forwarder for testing
 
-    uint256 constant START_TIME = 1000;
     uint256 constant FINISH_TIME = 2000;
 
     function setUp() public {
@@ -71,7 +70,6 @@ contract PredictionMarketTest is Test {
         assertEq(marketData.id, 0);
         assertEq(marketData.outcomeCount, 2);
         assertEq(marketData.totalPool, 0);
-        assertEq(marketData.startsAt, START_TIME);
         assertEq(marketData.finishesAt, FINISH_TIME);
         assertEq(marketData.isResolved, false);
         assertEq(marketData.creator, creator);

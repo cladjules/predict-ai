@@ -31,6 +31,8 @@ export type Config = {
 
 const CLAUDE_PROMPT = `You are a prediction market generator. Create 3 diverse and interesting prediction markets that people would want to bet on.
 
+Date now is ${new Date().toISOString()}, make sure they all resolve in the future.
+
 For each market, provide:
 - title: A clear, concise title (max 100 chars)
 - description: Detailed context and any relevant information (max 500 chars)
@@ -196,30 +198,20 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
       const paymentToken = runtime.config.paymentToken as `0x${string}`;
 
       const marketsWithParams = markets.map((market) => {
-        const startsAt = BigInt(Math.floor(new Date().getTime() / 1000));
         const finishesAt = BigInt(
           Math.floor(new Date(market.resolvesAt).getTime() / 1000),
         );
 
         // Compute content hash including question, description, and blockchain params
-        // Hash = keccak256(question, description, creator, outcomeCount, startsAt, finishesAt, paymentToken)
+        // Hash = keccak256(question, description, creator, outcomeCount, finishesAt, paymentToken)
         const contentHash = keccak256(
           encodePacked(
-            [
-              "string",
-              "string",
-              "address",
-              "uint8",
-              "uint256",
-              "uint256",
-              "address",
-            ],
+            ["string", "string", "address", "uint8", "uint256", "address"],
             [
               market.title,
               market.description || "",
               creatorAddress,
               market.options.length,
-              startsAt,
               finishesAt,
               paymentToken,
             ],
@@ -268,7 +260,6 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
             const originalMarket = markets[i];
 
             // Recompute the blockchain params (same as when we created the hash)
-            const startsAt = BigInt(Math.floor(new Date().getTime() / 1000));
             const finishesAt = BigInt(
               Math.floor(new Date(originalMarket.resolvesAt).getTime() / 1000),
             );
@@ -279,16 +270,15 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
             runtime.log(`  Content Hash: ${dbMarket.contentHash}`);
 
             // Encode market creation data for PredictionMarket._processReport()
-            // Format: (uint8 opType, uint8 outcomeCount, uint256 startsAt, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash)
+            // Format: (uint8 opType, uint8 outcomeCount, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash)
             // opType 2 = Market creation operation
             const marketData = encodeAbiParameters(
               parseAbiParameters(
-                "uint8 opType, uint8 outcomeCount, uint256 startsAt, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash",
+                "uint8 opType, uint8 outcomeCount, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash",
               ),
               [
                 2, // opType 2 for market creation
                 originalMarket.options.length,
-                startsAt,
                 finishesAt,
                 paymentToken,
                 creatorAddress,
@@ -311,7 +301,9 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
               .writeReport(runtime, {
                 receiver: contractAddress,
                 report: reportResponse,
-                gasConfig: {},
+                gasConfig: {
+                  gasLimit: "500000",
+                },
               })
               .result();
 

@@ -20,13 +20,12 @@ contract PredictionMarket is ReceiverTemplate {
         uint8 outcomeCount;
         uint256[] outcomePools; // Total amount bet on each outcome
         uint256 totalPool;
-        uint256 startsAt;
         uint256 finishesAt;
         uint8 winningOutcome;
         bool isResolved;
         address creator;
         address paymentToken; // address(0) for ETH, token address for ERC20
-        bytes32 contentHash; // Hash of (question, description, creator, outcomes, startsAt, finishesAt, paymentToken)
+        bytes32 contentHash; // Hash of (question, description, creator, outcomes, finishesAt, paymentToken)
     }
 
     struct Prediction {
@@ -50,7 +49,6 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 indexed marketId,
         address indexed creator,
         uint8 outcomeCount,
-        uint256 startsAt,
         uint256 finishesAt,
         address paymentToken,
         bytes32 contentHash
@@ -111,20 +109,17 @@ contract PredictionMarket is ReceiverTemplate {
     /**
      * @dev Create a new prediction market
      * @param _outcomeCount Number of possible outcomes
-     * @param _startsAt Timestamp when betting starts
      * @param _finishesAt Timestamp when betting ends
      * @param _paymentToken Token address (address(0) for native ETH, token address for ERC20)
      */
     function createMarket(
         uint8 _outcomeCount,
-        uint256 _startsAt,
         uint256 _finishesAt,
         address _paymentToken
     ) external onlyOwner returns (uint256) {
         return
             _createMarket(
                 _outcomeCount,
-                _startsAt,
                 _finishesAt,
                 _paymentToken,
                 msg.sender,
@@ -135,7 +130,6 @@ contract PredictionMarket is ReceiverTemplate {
     /**
      * @dev Internal function to create a new market
      * @param _outcomeCount Number of possible outcomes (2-4)
-     * @param _startsAt Timestamp when betting starts
      * @param _finishesAt Timestamp when betting ends
      * @param _paymentToken Token address for payments (address(0) for ETH)
      * @param _creator Address of the market creator
@@ -144,15 +138,16 @@ contract PredictionMarket is ReceiverTemplate {
      */
     function _createMarket(
         uint8 _outcomeCount,
-        uint256 _startsAt,
         uint256 _finishesAt,
         address _paymentToken,
         address _creator,
         bytes32 _contentHash
     ) internal returns (uint256) {
         require(_outcomeCount >= 2, "Must have at least 2 outcomes");
-        require(_startsAt >= block.timestamp, "Start time must be in future");
-        require(_finishesAt > _startsAt, "Finish time must be after start");
+        require(
+            _finishesAt > block.timestamp,
+            "Finish time must be in the future"
+        );
 
         uint256 marketId = marketCount++;
 
@@ -161,7 +156,6 @@ contract PredictionMarket is ReceiverTemplate {
         newMarket.outcomeCount = _outcomeCount;
         newMarket.outcomePools = new uint256[](_outcomeCount);
         newMarket.totalPool = 0;
-        newMarket.startsAt = _startsAt;
         newMarket.finishesAt = _finishesAt;
         newMarket.winningOutcome = 0;
         newMarket.isResolved = false;
@@ -173,7 +167,6 @@ contract PredictionMarket is ReceiverTemplate {
             marketId,
             _creator,
             _outcomeCount,
-            _startsAt,
             _finishesAt,
             _paymentToken,
             _contentHash
@@ -195,7 +188,6 @@ contract PredictionMarket is ReceiverTemplate {
     ) external payable marketExists(_marketId) marketNotResolved(_marketId) {
         Market storage market = markets[_marketId];
 
-        require(block.timestamp >= market.startsAt, "Market not started");
         require(block.timestamp <= market.finishesAt, "Market finished");
         require(_outcome < market.outcomeCount, "Invalid outcome");
 
@@ -484,10 +476,6 @@ contract PredictionMarket is ReceiverTemplate {
         require(_predictor != address(0), "Invalid predictor address");
         require(_outcome < market.outcomeCount, "Invalid outcome");
         require(_amount > 0, "Amount must be greater than 0");
-        require(
-            block.timestamp >= market.startsAt,
-            "Market has not started yet"
-        );
         require(block.timestamp < market.finishesAt, "Market has finished");
 
         // Create prediction record
@@ -524,7 +512,7 @@ contract PredictionMarket is ReceiverTemplate {
      * Format: (uint8 opType, ...data)
      *   opType 0: Prediction - (address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken)
      *   opType 1: Resolution - (uint256 marketId, uint8 winningOutcome)
-     *   opType 2: Market Creation - (uint8 outcomeCount, uint256 startsAt, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash)
+     *   opType 2: Market Creation - (uint8 outcomeCount, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash)
      * @notice This function is called by KeystoneForwarder after signature validation
      * @notice For predictions: Payment is assumed to have been collected via X402 before the report is sent
      * @notice For resolutions: Validation and authorization is performed by the CRE workflow
@@ -578,20 +566,18 @@ contract PredictionMarket is ReceiverTemplate {
             (
                 ,
                 uint8 outcomeCount,
-                uint256 startsAt,
                 uint256 finishesAt,
                 address paymentToken,
                 address creator,
                 bytes32 contentHash
             ) = abi.decode(
                     report,
-                    (uint8, uint8, uint256, uint256, address, address, bytes32)
+                    (uint8, uint8, uint256, address, address, bytes32)
                 );
 
             // Call the internal market creation function
             _createMarket(
                 outcomeCount,
-                startsAt,
                 finishesAt,
                 paymentToken,
                 creator,
