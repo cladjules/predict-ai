@@ -1,6 +1,6 @@
 {
   "chainSelectorName": "ethereum-testnet-sepolia-base-1",
-  "contractAddress": "0xe2d1AaAEeea816178EF71A151aeA84aC0f6F2d99",
+  "contractAddress": "0x3BD07E308EE07bcFF55Fd398E83b6ceAF345e6fC",
   "authorizedEVMAddress": "0x",
   "backendUrl": "http://localhost:4021"
 }

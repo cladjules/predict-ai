@@ -119,7 +119,9 @@ export const onHttpTrigger = (
     .writeReport(runtime, {
       receiver: runtime.config.contractAddress,
       report: reportResponse,
-      gasConfig: {},
+      gasConfig: {
+        gasLimit: "500000",
+      },
     })
     .result();
 

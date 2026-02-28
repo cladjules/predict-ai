@@ -10,7 +10,7 @@ import { decodeEventLog, parseAbi } from "viem";
 import { Config } from "./paymentHandler";
 
 export const eventAbi = parseAbi([
-  "event MarketCreated(uint256 indexed marketId, address indexed creator, uint8 outcomeCount, uint256 startsAt, uint256 finishesAt, address paymentToken, bytes32 contentHash)",
+  "event MarketCreated(uint256 indexed marketId, address indexed creator, uint8 outcomeCount, uint256 finishesAt, address paymentToken, bytes32 contentHash)",
   "event PredictionPlaced(uint256 indexed predictionId, uint256 indexed marketId, address indexed predictor, uint8 outcome, uint256 amount, uint256 timestamp)",
   "event MarketResolved(uint256 indexed marketId, uint8 winningOutcome, uint256 totalPool, uint256 timestamp)",
 ]);
@@ -188,7 +188,6 @@ export const onLogTrigger = (runtime: Runtime<Config>, log: EVMLog): string => {
         marketId,
         creator,
         outcomeCount,
-        startsAt,
         finishesAt,
         paymentToken,
         contentHash,
@@ -198,7 +197,6 @@ export const onLogTrigger = (runtime: Runtime<Config>, log: EVMLog): string => {
       runtime.log(`  - Market ID: ${marketId}`);
       runtime.log(`  - Creator: ${creator}`);
       runtime.log(`  - Outcome Count: ${outcomeCount}`);
-      runtime.log(`  - Starts At: ${startsAt}`);
       runtime.log(`  - Finishes At: ${finishesAt}`);
       runtime.log(`  - Payment Token: ${paymentToken}`);
       runtime.log(`  - Content Hash: ${contentHash}`);
