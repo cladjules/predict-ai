@@ -61,12 +61,12 @@ export const onHttpTrigger = (
   // Parse prediction data from X402 payment
   const prediction = {
     marketId: BigInt(inputData.marketId),
-    predictor: inputData.predictor as `0x${string}`,
-    outcome: inputData.outcome,
-    amount: BigInt(inputData.amount),
+    predictor: inputData.payer as `0x${string}`,
+    outcome: inputData.outcomeIndex,
+    amount: BigInt(inputData.amount * 1e6), // Convert to wei for USDC
     paymentToken: inputData.paymentToken as `0x${string}`,
     x402TxHash: inputData.x402TxHash,
-    timestamp: BigInt(Date.now()),
+    timestamp: new Date(inputData.timestamp),
   };
 
   runtime.log(

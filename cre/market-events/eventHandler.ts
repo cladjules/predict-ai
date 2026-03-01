@@ -271,7 +271,7 @@ export const onLogTrigger = (runtime: Runtime<Config>, log: EVMLog): string => {
 
           if (result.created) {
             runtime.log(
-              `✅ Prediction ${predictionId} stored in database for market ${result.dbMarketId} (blockchain ID: ${marketId})`,
+              `✅ Prediction ${predictionId} stored in database for market (blockchain ID: ${marketId})`,
             );
           } else {
             runtime.log(
@@ -314,7 +314,7 @@ export const onLogTrigger = (runtime: Runtime<Config>, log: EVMLog): string => {
 
           if (result.resolved) {
             runtime.log(
-              `✅ Market ${result.dbMarketId} (blockchain ID: ${marketId}) status updated to resolved in database`,
+              `✅ Market (blockchain ID: ${marketId}) status updated to resolved in database`,
             );
           } else {
             runtime.log(
