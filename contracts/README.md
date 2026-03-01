@@ -332,7 +332,7 @@ If Yes wins:
 
 - Only market creators can resolve their markets
 - Resolution only allowed after betting period ends (finishesAt)
-- Betting only allowed during the active window (startsAt → finishesAt)
+- Betting only allowed during the active window (< finishesAt)
 
 **Gas Considerations:**
 

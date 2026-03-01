@@ -2,6 +2,7 @@
   "name": "market-events",
   "version": "1.0.0",
   "scripts": {
+    "simulate:payment": "cd .. && cre workflow simulate market-events -T staging-settings --trigger-index 0 --non-interactive --http-payload @test-payload.json --broadcast",
     "simulate": "cd .. && cre workflow simulate market-events -T staging-settings",
     "simulate:prod": "cd .. && cre workflow simulate market-events -T production-settings",
     "deploy": "cd .. && cre workflow deploy market-events -T staging-settings",

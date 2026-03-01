@@ -5,22 +5,61 @@ import {
   consensusIdenticalAggregation,
   text,
   ok,
+  EVMClient,
+  bytesToHex,
+  hexToBase64,
+  TxStatus,
 } from "@chainlink/cre-sdk";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { PredictionMarket } from "./types";
 import { Config } from "./generationHandler";
+import { getNetwork } from "./utils";
 
-const fetchCompletedMarkets =
-  (apiKey: string, mockMarkets?: PredictionMarket[]) =>
+// Backend resolution update removed - now handled by eventHandler listening to MarketResolved events
+// const updateMarketResolution = ...
+
+const fetchActiveMarkets =
+  (apiKey: string, runtime: Runtime<Config>) =>
   (sendRequester: HTTPSendRequester) => {
-    // TODO: Replace with actual database API call
-    // const markets = await fetch('https://api.example.com/markets/completed')
+    // Fetch markets from backend database that are eligible for resolution
+    let eligibleMarkets: PredictionMarket[] = [];
 
-    // For now, use mock markets if provided
-    const allMarkets = mockMarkets || [];
+    if (runtime.config.backendUrl && apiKey) {
+      const response = sendRequester
+        .sendRequest({
+          url: `${runtime.config.backendUrl}/api/markets/active`,
+          method: "GET",
+          headers: {
+            "x-api-key": apiKey,
+          },
+        })
+        .result();
+
+      if (response.statusCode === 200) {
+        try {
+          const bodyText = new TextDecoder().decode(
+            response.body || new Uint8Array(),
+          );
+          const responseData = JSON.parse(bodyText);
+          eligibleMarkets = responseData.markets || [];
+          runtime.log(
+            `Fetched ${eligibleMarkets.length} eligible markets from database`,
+          );
+        } catch (parseError) {
+          runtime.log(
+            `WARNING: Failed to parse backend response: ${parseError}`,
+          );
+        }
+      } else {
+        runtime.log(
+          `WARNING: Failed to fetch markets from database. Status: ${response.statusCode}`,
+        );
+      }
+    }
 
     // Filter markets where resolvesAt is in the past
     const now = new Date();
-    const eligibleMarkets = allMarkets.reduce((acc, market) => {
+    const marketsToResolve = eligibleMarkets.reduce((acc, market) => {
       let resolvesAt = new Date(market.resolvesAt);
 
       // If the time is exactly "00:00:00", adjust to end of day
@@ -52,12 +91,12 @@ const fetchCompletedMarkets =
       return acc;
     }, [] as PredictionMarket[]);
 
-    if (eligibleMarkets.length === 0) {
+    if (marketsToResolve.length === 0) {
       return [];
     }
 
     // Build a single prompt with all markets
-    const marketsList = eligibleMarkets
+    const marketsList = marketsToResolve
       .map(
         (market, idx) =>
           `${idx + 1}. Title: "${market.title}"
@@ -128,7 +167,7 @@ Only include markets that have resolved. Return an empty array [] if none have r
     const resolvedMarkets: PredictionMarket[] = results
       .filter((r) => r.resolved)
       .map((r) => ({
-        ...eligibleMarkets[r.marketIndex - 1],
+        ...marketsToResolve[r.marketIndex - 1],
         resolvedOption: r.outcome,
       }));
 
@@ -149,11 +188,22 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
     return "Error: Missing API key";
   }
 
+  const backendSecretResult = runtime.getSecret({
+    id: "BACKEND_API_KEY",
+  });
+  const backendSecret = backendSecretResult.result();
+  const backendApiKey = backendSecret.value;
+
+  if (!backendApiKey) {
+    runtime.log("ERROR: BACKEND_API_KEY not found in secrets");
+    return "Error: Missing API key";
+  }
+
   const httpClient = new HTTPClient();
   const resolvedMarkets = httpClient
     .sendRequest(
       runtime,
-      fetchCompletedMarkets(apiKey, runtime.config.mockMarkets),
+      fetchActiveMarkets(apiKey, runtime),
       consensusIdenticalAggregation<PredictionMarket[]>(),
     )()
     .result();
@@ -162,8 +212,106 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
     `Resolved ${resolvedMarkets.length} markets: ${JSON.stringify(resolvedMarkets)}`,
   );
 
-  // TODO: Trigger on-chain resolution for each resolved market
-  // TODO: Update database with resolution results
+  // Send resolution to contract for each resolved market
+  if (resolvedMarkets.length > 0) {
+    // Get network and contract info from config
+    const chainSelectorName = runtime.config.chainSelectorName;
+    const contractAddress = runtime.config.contractAddress;
+
+    if (!chainSelectorName || !contractAddress) {
+      runtime.log(
+        "WARNING: Network or contract address not configured for on-chain resolution",
+      );
+      return `Resolved ${resolvedMarkets.length} markets (not sent to chain)`;
+    }
+
+    const network = getNetwork(chainSelectorName);
+
+    if (!network) {
+      runtime.log(
+        `ERROR: Could not resolve network for chainSelectorName: ${chainSelectorName}`,
+      );
+      return `Failed to resolve network`;
+    }
+
+    const evmClient = new EVMClient(BigInt(network.chainSelector.selector));
+
+    for (const market of resolvedMarkets) {
+      try {
+        // Find the winning outcome index
+        const winningOutcomeIndex = market.options.indexOf(
+          market.resolvedOption!,
+        );
+
+        if (winningOutcomeIndex === -1) {
+          runtime.log(
+            `ERROR: Could not find outcome "${market.resolvedOption}" in market options`,
+          );
+          continue;
+        }
+
+        runtime.log(
+          `Encoding resolution for market ${market.id || "unknown"}: outcome ${winningOutcomeIndex}`,
+        );
+
+        // Encode resolution data for PredictionMarket._processReport()
+        // Format: (uint8 opType, uint256 marketId, uint8 winningOutcome)
+        // opType 1 = Resolution operation
+        const resolutionData = encodeAbiParameters(
+          parseAbiParameters(
+            "uint8 opType, uint256 marketId, uint8 winningOutcome",
+          ),
+          [
+            1, // opType 1 for resolution
+            BigInt(market.id || 0),
+            winningOutcomeIndex,
+          ],
+        );
+
+        // Generate CRE report
+        const reportResponse = runtime
+          .report({
+            encodedPayload: hexToBase64(resolutionData),
+            encoderName: "evm",
+            signingAlgo: "ecdsa",
+            hashingAlgo: "keccak256",
+          })
+          .result();
+
+        // Write report to PredictionMarket contract
+        const writeResult = evmClient
+          .writeReport(runtime, {
+            receiver: contractAddress,
+            report: reportResponse,
+            gasConfig: {
+              gasLimit: "500000",
+            },
+          })
+          .result();
+
+        if (writeResult.txStatus === TxStatus.SUCCESS) {
+          // TxStatus.SUCCESS
+          const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
+          runtime.log(
+            `✅ Market ${market.id} resolved on-chain: ${txHash} - Outcome: ${market.resolvedOption}`,
+          );
+
+          // Backend database sync now handled by eventHandler listening to MarketResolved event
+          runtime.log(
+            `Database sync will be handled by eventHandler on MarketResolved event`,
+          );
+        } else {
+          runtime.log(
+            `ERROR: Failed to resolve market ${market.id} on-chain. Status: ${writeResult.txStatus}`,
+          );
+        }
+      } catch (error) {
+        runtime.log(
+          `ERROR: Failed to process resolution for market ${market.id}: ${error}`,
+        );
+      }
+    }
+  }
 
   return `Resolved ${resolvedMarkets.length} markets`;
 };

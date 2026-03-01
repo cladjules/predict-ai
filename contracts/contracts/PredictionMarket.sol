@@ -20,12 +20,12 @@ contract PredictionMarket is ReceiverTemplate {
         uint8 outcomeCount;
         uint256[] outcomePools; // Total amount bet on each outcome
         uint256 totalPool;
-        uint256 startsAt;
         uint256 finishesAt;
         uint8 winningOutcome;
         bool isResolved;
         address creator;
         address paymentToken; // address(0) for ETH, token address for ERC20
+        bytes32 contentHash; // Hash of (question, description, creator, outcomes, finishesAt, paymentToken)
     }
 
     struct Prediction {
@@ -49,9 +49,9 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 indexed marketId,
         address indexed creator,
         uint8 outcomeCount,
-        uint256 startsAt,
         uint256 finishesAt,
-        address paymentToken
+        address paymentToken,
+        bytes32 contentHash
     );
 
     event PredictionPlaced(
@@ -109,19 +109,45 @@ contract PredictionMarket is ReceiverTemplate {
     /**
      * @dev Create a new prediction market
      * @param _outcomeCount Number of possible outcomes
-     * @param _startsAt Timestamp when betting starts
      * @param _finishesAt Timestamp when betting ends
      * @param _paymentToken Token address (address(0) for native ETH, token address for ERC20)
      */
     function createMarket(
         uint8 _outcomeCount,
-        uint256 _startsAt,
         uint256 _finishesAt,
         address _paymentToken
     ) external onlyOwner returns (uint256) {
+        return
+            _createMarket(
+                _outcomeCount,
+                _finishesAt,
+                _paymentToken,
+                msg.sender,
+                bytes32(0) // No content hash for manual creation
+            );
+    }
+
+    /**
+     * @dev Internal function to create a new market
+     * @param _outcomeCount Number of possible outcomes (2-4)
+     * @param _finishesAt Timestamp when betting ends
+     * @param _paymentToken Token address for payments (address(0) for ETH)
+     * @param _creator Address of the market creator
+     * @param _contentHash Hash of market content for matching with off-chain database
+     * @notice Called by createMarket() after ownership check or by _processReport() for CRE workflow
+     */
+    function _createMarket(
+        uint8 _outcomeCount,
+        uint256 _finishesAt,
+        address _paymentToken,
+        address _creator,
+        bytes32 _contentHash
+    ) internal returns (uint256) {
         require(_outcomeCount >= 2, "Must have at least 2 outcomes");
-        require(_startsAt >= block.timestamp, "Start time must be in future");
-        require(_finishesAt > _startsAt, "Finish time must be after start");
+        require(
+            _finishesAt > block.timestamp,
+            "Finish time must be in the future"
+        );
 
         uint256 marketId = marketCount++;
 
@@ -130,20 +156,20 @@ contract PredictionMarket is ReceiverTemplate {
         newMarket.outcomeCount = _outcomeCount;
         newMarket.outcomePools = new uint256[](_outcomeCount);
         newMarket.totalPool = 0;
-        newMarket.startsAt = _startsAt;
         newMarket.finishesAt = _finishesAt;
         newMarket.winningOutcome = 0;
         newMarket.isResolved = false;
-        newMarket.creator = msg.sender;
+        newMarket.creator = _creator;
         newMarket.paymentToken = _paymentToken;
+        newMarket.contentHash = _contentHash;
 
         emit MarketCreated(
             marketId,
-            msg.sender,
+            _creator,
             _outcomeCount,
-            _startsAt,
             _finishesAt,
-            _paymentToken
+            _paymentToken,
+            _contentHash
         );
 
         return marketId;
@@ -162,7 +188,6 @@ contract PredictionMarket is ReceiverTemplate {
     ) external payable marketExists(_marketId) marketNotResolved(_marketId) {
         Market storage market = markets[_marketId];
 
-        require(block.timestamp >= market.startsAt, "Market not started");
         require(block.timestamp <= market.finishesAt, "Market finished");
         require(_outcome < market.outcomeCount, "Invalid outcome");
 
@@ -186,8 +211,8 @@ contract PredictionMarket is ReceiverTemplate {
             );
         }
 
-        // Call internal predictFor with msg.sender as predictor
-        predictFor(msg.sender, _marketId, _outcome, betAmount);
+        // Call internal _predictMarket with msg.sender as predictor
+        _predictMarket(msg.sender, _marketId, _outcome, betAmount);
     }
 
     /**
@@ -210,6 +235,17 @@ contract PredictionMarket is ReceiverTemplate {
             block.timestamp > markets[_marketId].finishesAt,
             "Market not finished yet"
         );
+
+        _resolveMarket(_marketId, _winningOutcome);
+    }
+
+    /**
+     * @dev Internal function to resolve a market with the winning outcome and auto-payout winners
+     * @param _marketId The market ID
+     * @param _winningOutcome The winning outcome index
+     * @notice Called by resolveMarket() after ownership checks or by _processReport() for CRE workflow
+     */
+    function _resolveMarket(uint256 _marketId, uint8 _winningOutcome) internal {
         require(
             _winningOutcome < markets[_marketId].outcomeCount,
             "Invalid outcome"
@@ -288,37 +324,9 @@ contract PredictionMarket is ReceiverTemplate {
      */
     function getMarket(
         uint256 _marketId
-    )
-        external
-        view
-        marketExists(_marketId)
-        marketExists(_marketId)
-        returns (
-            uint256 id,
-            uint8 outcomeCount,
-            uint256[] memory outcomePools,
-            uint256 totalPool,
-            uint256 startsAt,
-            uint256 finishesAt,
-            uint8 winningOutcome,
-            bool isResolved,
-            address creator,
-            address paymentToken
-        )
-    {
+    ) external view marketExists(_marketId) returns (Market memory) {
         Market storage market = markets[_marketId];
-        return (
-            market.id,
-            market.outcomeCount,
-            market.outcomePools,
-            market.totalPool,
-            market.startsAt,
-            market.finishesAt,
-            market.winningOutcome,
-            market.isResolved,
-            market.creator,
-            market.paymentToken
-        );
+        return market;
     }
 
     /**
@@ -327,23 +335,9 @@ contract PredictionMarket is ReceiverTemplate {
      */
     function getPrediction(
         uint256 _predictionId
-    )
-        external
-        view
-        returns (
-            uint256 marketId,
-            address predictor,
-            uint8 outcome,
-            uint256 amount
-        )
-    {
+    ) external view returns (Prediction memory) {
         Prediction storage prediction = predictions[_predictionId];
-        return (
-            prediction.marketId,
-            prediction.predictor,
-            prediction.outcome,
-            prediction.amount
-        );
+        return prediction;
     }
 
     /**
@@ -471,7 +465,7 @@ contract PredictionMarket is ReceiverTemplate {
      * @notice This function does NOT collect payment - it assumes payment was already collected
      * @notice Called by predict() after payment collection or by _processReport() for CRE workflow
      */
-    function predictFor(
+    function _predictMarket(
         address _predictor,
         uint256 _marketId,
         uint8 _outcome,
@@ -482,10 +476,6 @@ contract PredictionMarket is ReceiverTemplate {
         require(_predictor != address(0), "Invalid predictor address");
         require(_outcome < market.outcomeCount, "Invalid outcome");
         require(_amount > 0, "Amount must be greater than 0");
-        require(
-            block.timestamp >= market.startsAt,
-            "Market has not started yet"
-        );
         require(block.timestamp < market.finishesAt, "Market has finished");
 
         // Create prediction record
@@ -516,29 +506,85 @@ contract PredictionMarket is ReceiverTemplate {
     }
 
     /**
-     * @dev Process incoming prediction reports from Chainlink CRE workflows
-     * @param report The encoded prediction data from the CRE workflow
+     * @dev Process incoming reports from Chainlink CRE workflows
+     * Supports predictions, market resolutions, and market creation
+     * @param report The encoded data from the CRE workflow
+     * Format: (uint8 opType, ...data)
+     *   opType 0: Prediction - (address predictor, uint256 marketId, uint8 outcome, uint256 amount, address paymentToken)
+     *   opType 1: Resolution - (uint256 marketId, uint8 winningOutcome)
+     *   opType 2: Market Creation - (uint8 outcomeCount, uint256 finishesAt, address paymentToken, address creator, bytes32 contentHash)
      * @notice This function is called by KeystoneForwarder after signature validation
-     * @notice Payment is assumed to have been collected via X402 before the report is sent
-     * @notice x402TxHash is tracked in backend database, not stored on-chain for gas efficiency
+     * @notice For predictions: Payment is assumed to have been collected via X402 before the report is sent
+     * @notice For resolutions: Validation and authorization is performed by the CRE workflow
+     * @notice For market creation: Creator address and contentHash are provided by the CRE workflow
      */
     function _processReport(bytes calldata report) internal override {
-        // Decode the prediction data from the report
-        (
-            address predictor,
-            uint256 marketId,
-            uint8 outcome,
-            uint256 amount,
-            address paymentToken
-        ) = abi.decode(report, (address, uint256, uint8, uint256, address));
+        // Decode operation type from first byte
+        uint8 opType = abi.decode(report[:32], (uint8));
 
-        // check paymentToken matches market payment token
-        require(
-            paymentToken == markets[marketId].paymentToken,
-            "Payment token mismatch"
-        );
+        if (opType == 0) {
+            // Prediction operation
+            (
+                ,
+                address predictor,
+                uint256 marketId,
+                uint8 outcome,
+                uint256 amount,
+                address paymentToken
+            ) = abi.decode(
+                    report,
+                    (uint8, address, uint256, uint8, uint256, address)
+                );
 
-        // Call the public predictFor function
-        predictFor(predictor, marketId, outcome, amount);
+            // Check paymentToken matches market payment token
+            require(
+                paymentToken == markets[marketId].paymentToken,
+                "Payment token mismatch"
+            );
+
+            // Call the internal _predictMarket function
+            _predictMarket(predictor, marketId, outcome, amount);
+        } else if (opType == 1) {
+            // Resolution operation
+            (, uint256 marketId, uint8 winningOutcome) = abi.decode(
+                report,
+                (uint8, uint256, uint8)
+            );
+
+            // Validate market exists and is not resolved
+            require(marketId < marketCount, "Market does not exist");
+            require(!markets[marketId].isResolved, "Market already resolved");
+            require(
+                block.timestamp > markets[marketId].finishesAt,
+                "Market not finished yet"
+            );
+
+            // Call the internal resolution function
+            _resolveMarket(marketId, winningOutcome);
+        } else if (opType == 2) {
+            // Market creation operation
+            (
+                ,
+                uint8 outcomeCount,
+                uint256 finishesAt,
+                address paymentToken,
+                address creator,
+                bytes32 contentHash
+            ) = abi.decode(
+                    report,
+                    (uint8, uint8, uint256, address, address, bytes32)
+                );
+
+            // Call the internal market creation function
+            _createMarket(
+                outcomeCount,
+                finishesAt,
+                paymentToken,
+                creator,
+                contentHash
+            );
+        } else {
+            revert("Invalid operation type");
+        }
     }
 }

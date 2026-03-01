@@ -1,8 +1,9 @@
 {
   "marketId": "1",
-  "predictor": "0xc257274276a4e539741ca11b590b9447b26a8051",
-  "outcome": 0,
-  "amount": "1000000",
+  "outcomeIndex": 1,
+  "amount": 0.1,
+  "payer": "0x1a5DbDB8DfA5c5795d75A113EDdaCa26d8DC456B",
   "paymentToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  "x402TxHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+  "x402TxHash": "0x123456",
+  "timestamp": "2026-02-27T04:43:27.811Z"
 }
