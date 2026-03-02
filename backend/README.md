@@ -12,7 +12,6 @@ cd backend
 npm install
 cp .env.example .env
 # Configure required environment variables in .env:
-#   - WALLET_RECIPIENT_ADDRESS: Your EVM wallet address
 #   - WALLET_PRIVATE_KEY: Your wallet private key
 #   - NETWORK: eip155:84532 (Base Sepolia) or eip155:8453 (Base)
 #   - MONGODB_URI: Your MongoDB connection string
@@ -52,18 +51,17 @@ See [API.md](./API.md) for complete API documentation.
 
 ## Environment Variables
 
-| Variable                   | Description                      | Required |
-| -------------------------- | -------------------------------- | -------- |
-| `WALLET_RECIPIENT_ADDRESS` | EVM wallet to receive payments   | Yes      |
-| `WALLET_PRIVATE_KEY`       | Private key for signing          | Yes      |
-| `NETWORK`                  | EIP-155 chain ID (84532 or 8453) | Yes      |
-| `MONGODB_URI`              | MongoDB connection string        | Yes      |
-| `API_KEY`                  | API key for CRE workflows        | Yes      |
-| `FACILITATOR_URL`          | X402 facilitator URL             | Yes      |
-| `CRE_TRIGGER_URL`          | Chainlink CRE gateway URL        | Optional |
-| `CRE_WORKFLOW_ID`          | CRE workflow ID                  | Optional |
-| `PORT`                     | Server port (default: 4021)      | No       |
-| `SIMULATE`                 | Skip blockchain calls (dev mode) | No       |
+| Variable             | Description                      | Required |
+| -------------------- | -------------------------------- | -------- |
+| `WALLET_PRIVATE_KEY` | Private key for signing          | Yes      |
+| `NETWORK`            | EIP-155 chain ID (84532 or 8453) | Yes      |
+| `MONGODB_URI`        | MongoDB connection string        | Yes      |
+| `API_KEY`            | API key for CRE workflows        | Yes      |
+| `FACILITATOR_URL`    | X402 facilitator URL             | Yes      |
+| `CRE_TRIGGER_URL`    | Chainlink CRE gateway URL        | Optional |
+| `CRE_WORKFLOW_ID`    | CRE workflow ID                  | Optional |
+| `PORT`               | Server port (default: 4021)      | No       |
+| `SIMULATE`           | Skip blockchain calls (dev mode) | No       |
 
 ## Architecture
 

@@ -8,7 +8,8 @@
     "deploy:baseSepolia": "HARDHAT_NETWORK=baseSepolia npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseSepolia --verify --reset",
     "deploy:sepolia": "HARDHAT_NETWORK=sepolia npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network sepolia --verify --reset",
     "clean": "npx hardhat clean",
-    "size": "node -e \"const fs = require('fs'); const artifact = JSON.parse(fs.readFileSync('artifacts/contracts/PredictionMarket.sol/PredictionMarket.json', 'utf8')); const bytecodeSize = (artifact.bytecode.length - 2) / 2; console.log('Deployed bytecode size:', bytecodeSize, 'bytes'); console.log('Contract is', bytecodeSize < 24576 ? 'DEPLOYABLE ✓' : 'TOO LARGE ✗');\""
+    "size": "node -e \"const fs = require('fs'); const artifact = JSON.parse(fs.readFileSync('artifacts/contracts/PredictionMarket.sol/PredictionMarket.json', 'utf8')); const bytecodeSize = (artifact.bytecode.length - 2) / 2; console.log('Deployed bytecode size:', bytecodeSize, 'bytes'); console.log('Contract is', bytecodeSize < 24576 ? 'DEPLOYABLE ✓' : 'TOO LARGE ✗');\"",
+    "sync-deployment": "node scripts/sync-deployment.cjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",

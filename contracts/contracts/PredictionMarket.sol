@@ -554,10 +554,6 @@ contract PredictionMarket is ReceiverTemplate {
             // Validate market exists and is not resolved
             require(marketId < marketCount, "Market does not exist");
             require(!markets[marketId].isResolved, "Market already resolved");
-            require(
-                block.timestamp > markets[marketId].finishesAt,
-                "Market not finished yet"
-            );
 
             // Call the internal resolution function
             _resolveMarket(marketId, winningOutcome);

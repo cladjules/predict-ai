@@ -168,6 +168,24 @@ npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network base
 # Use mainnet USDC: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 ```
 
+### Sync Deployment to Backend
+
+After deploying to any network, sync the contract address to the backend:
+
+```shell
+npm run sync-deployment
+```
+
+This copies the deployed contract address from Hardhat Ignition's deployment files to `backend/deployed-contracts.json`, which the backend reads at runtime to automatically configure the correct contract address based on the network.
+
+**How it works:**
+
+- Reads from `ignition/deployments/chain-{chainId}/deployed_addresses.json`
+- Writes to `backend/deployed-contracts.json` with network-specific addresses
+- Backend automatically selects the right address based on `NETWORK` env variable
+
+**Important:** Run this after every deployment to keep the backend in sync!
+
 ## Integration with X402 Backend
 
 Your X402 backend (`backend/test-x402`) integrates with these contracts:
