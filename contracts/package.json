@@ -7,14 +7,16 @@
     "compile": "npx hardhat compile",
     "deploy:baseSepolia": "HARDHAT_NETWORK=baseSepolia npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseSepolia --verify --reset",
     "deploy:sepolia": "HARDHAT_NETWORK=sepolia npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network sepolia --verify --reset",
+    "upgrade:baseSepolia": "HARDHAT_NETWORK=baseSepolia npx hardhat ignition deploy ignition/modules/UpgradePredictionMarket.ts --network baseSepolia --verify",
+    "upgrade:sepolia": "HARDHAT_NETWORK=sepolia npx hardhat ignition deploy ignition/modules/UpgradePredictionMarket.ts --network sepolia --verify",
     "clean": "npx hardhat clean",
-    "size": "node -e \"const fs = require('fs'); const artifact = JSON.parse(fs.readFileSync('artifacts/contracts/PredictionMarket.sol/PredictionMarket.json', 'utf8')); const bytecodeSize = (artifact.bytecode.length - 2) / 2; console.log('Deployed bytecode size:', bytecodeSize, 'bytes'); console.log('Contract is', bytecodeSize < 24576 ? 'DEPLOYABLE ✓' : 'TOO LARGE ✗');\"",
     "sync-deployment": "node scripts/sync-deployment.cjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.2",
     "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
     "@types/node": "^22.19.11",
     "dotenv": "^17.3.1",
     "forge-std": "github:foundry-rs/forge-std#v1.9.4",

@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {IERC165} from "./interfaces/IERC165.sol";
 import {IReceiver} from "./interfaces/IReceiver.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-/// @title ReceiverTemplate - Abstract receiver with optional permission controls
+/// @title ReceiverTemplateUpgradeable - Upgradeable abstract receiver with optional permission controls
 /// @notice Provides flexible, updatable security checks for receiving workflow reports
-/// @dev The forwarder address is required at construction time for security.
+/// @dev UUPS upgradeable contract. The forwarder address is set during initialization.
 ///      Additional permission fields can be configured using setter functions.
-abstract contract ReceiverTemplate is IReceiver, Ownable {
+abstract contract ReceiverTemplateUpgradeable is
+    Initializable,
+    IReceiver,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     // Required permission field at deployment, configurable after
     address private s_forwarderAddress; // If set, only this address can call onReport
 
@@ -17,6 +24,9 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     address private s_expectedAuthor; // If set, only reports from this workflow owner are accepted
     bytes10 private s_expectedWorkflowName; // Only validated when s_expectedAuthor is also set
     bytes32 private s_expectedWorkflowId; // If set, only reports from this specific workflow ID are accepted
+
+    // Reserve storage gap for future upgrades (50 slots)
+    uint256[50] private __gap;
 
     // Hex character lookup table for bytes-to-hex conversion
     bytes private constant HEX_CHARS = "0123456789abcdef";
@@ -48,10 +58,18 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     );
     event SecurityWarning(string message);
 
-    /// @notice Constructor sets msg.sender as the owner and configures the forwarder address
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initializer replaces constructor for upgradeable contracts
     /// @param _forwarderAddress The address of the Chainlink Forwarder contract (cannot be address(0))
     /// @dev The forwarder address is required for security - it ensures only verified reports are processed
-    constructor(address _forwarderAddress) Ownable(msg.sender) {
+    function __ReceiverTemplate_init(
+        address _forwarderAddress
+    ) internal onlyInitializing {
+        __Ownable_init(msg.sender);
         if (_forwarderAddress == address(0)) {
             revert InvalidForwarderAddress();
         }
@@ -261,6 +279,12 @@ abstract contract ReceiverTemplate is IReceiver, Ownable {
     /// @param report The report calldata containing your workflow's encoded data
     /// @dev Implement this function with your contract's business logic
     function _processReport(bytes calldata report) internal virtual;
+
+    /// @notice Required by UUPS to authorize upgrades
+    /// @dev Only owner can upgrade the contract
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
 
     /// @inheritdoc IERC165
     function supportsInterface(

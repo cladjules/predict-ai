@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./ReceiverTemplate.sol";
+import "./ReceiverTemplateUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,11 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @title PredictionMarket
  * @dev A decentralized prediction market contract where users can bet on outcomes
  * Supports both native ETH and any ERC20 token (e.g., USDC) for payments
- * Integrates with Chainlink CRE workflows via ReceiverTemplate
+ * Integrates with Chainlink CRE workflows via ReceiverTemplateUpgradeable
+ * Uses UUPS proxy pattern for upgradeability
  */
-contract PredictionMarket is ReceiverTemplate {
+contract PredictionMarket is ReceiverTemplateUpgradeable {
     using Address for address payable;
     using SafeERC20 for IERC20;
+
     struct Market {
         uint256 id;
         uint8 outcomeCount;
@@ -43,6 +45,9 @@ contract PredictionMarket is ReceiverTemplate {
     mapping(uint256 => Prediction) public predictions;
     mapping(address => uint256[]) public userPredictions;
     mapping(uint256 => uint256[]) public marketPredictions;
+
+    // Reserve storage gap for future upgrades (50 slots)
+    uint256[50] private __gap;
 
     // Events
     event MarketCreated(
@@ -84,11 +89,16 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 amount
     );
 
-    /// @notice Constructor sets up the contract with the Chainlink forwarder address
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initializer replaces constructor for upgradeable contracts
     /// @param _forwarderAddress The address of the Chainlink KeystoneForwarder contract
-    constructor(
-        address _forwarderAddress
-    ) ReceiverTemplate(_forwarderAddress) {}
+    function initialize(address _forwarderAddress) public initializer {
+        __ReceiverTemplate_init(_forwarderAddress);
+    }
 
     // Modifiers
     modifier marketExists(uint256 _marketId) {

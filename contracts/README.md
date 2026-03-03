@@ -13,32 +13,40 @@ npx hardhat test
 
 ## Overview
 
-The primary contract is `PredictionMarket.sol`. It supports ETH and ERC20 payments, time-bounded markets, and on-chain recording of predictions submitted via Chainlink CRE forwarders.
+The primary contract is `PredictionMarket.sol`. It supports ETH and ERC20 payments, time-bounded markets, and on-chain recording of predictions submitted via Chainlink CRE forwarders. The contract uses the UUPS (Universal Upgradeable Proxy Standard) pattern for upgradeability.
 
 ## Security & Access Control
 
-- `PredictionMarket` inherits `ReceiverTemplate`, which includes OpenZeppelin `Ownable`.
-- The contract requires a KeystoneForwarder address at construction for CRE reports.
-- Owner-only restrictions are used for sensitive operations; if you expect public access for user-facing flows (e.g. `predict`), update access modifiers accordingly.
+- `PredictionMarket` inherits `ReceiverTemplateUpgradeable`, which includes OpenZeppelin `OwnableUpgradeable` and `UUPSUpgradeable`.
+- The contract requires a KeystoneForwarder address during initialization for CRE reports.
+- Owner-only restrictions are used for sensitive operations and contract upgrades.
+- The UUPS pattern ensures only the contract owner can upgrade the implementation.
 
 ## Build & Deployment
 
-Set required environment variables (see `.env.example`) then deploy with ignition or your preferred scripts:
+Set required environment variables (see `.env.example`) then deploy with Hardhat Ignition:
 
 ```bash
 # compile
 npx hardhat compile
 
-# example ignition deploy (use network flag)
+# deploy upgradeable version (UUPS proxy)
 npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network <network>
 ```
 
-## Deployment
+## Deployment (UUPS Proxy)
 
-Deploy with the KeystoneForwarder address:
+The contract is deployed using a UUPS proxy pattern:
 
-```solidity
-PredictionMarket market = new PredictionMarket(keystoneForwarderAddress);
+```typescript
+// 1. Deploy implementation contract
+const implementation = new PredictionMarket();
+
+// 2. Deploy proxy with initialization
+const proxy = new ERC1967Proxy(implementation, initData);
+
+// 3. Interact via proxy address
+const market = PredictionMarket(proxyAddress);
 ```
 
 For Base Sepolia/Mainnet forwarder addresses, see [Chainlink Forwarder Directory](https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory).
@@ -118,13 +126,11 @@ BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 Base Sepolia is the recommended testnet for development with USDC support.
 
 ```shell
-# Quick deploy with script
+# Deploy upgradeable version (UUPS proxy)
 npm run deploy:baseSepolia
 
 # Or manually
-npm run deploy:baseSepolia
-# or
-npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseSepolia
+npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseSepolia --verify
 ```
 
 **Base Sepolia Details:**
@@ -135,22 +141,12 @@ npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network baseS
 - Explorer: https://sepolia.basescan.org
 - Get testnet ETH: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
 
-#### Deploy to Other Networks
-
-Deploy to local chain:
-
-```shell
-npm run deploy:local
-# or
-npx hardhat ignition deploy ignition/modules/PredictionMarket.ts
-```
-
-Deploy to Ethereum Sepolia:
+#### Deploy to Ethereum Sepolia
 
 ```shell
 npm run deploy:sepolia
 # or
-npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network sepolia
+npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network sepolia --verify
 ```
 
 #### Deploy to Base Mainnet (Production)
@@ -162,15 +158,44 @@ When ready for production:
 BASE_MAINNET_PRIVATE_KEY=your_mainnet_key
 BASE_MAINNET_RPC_URL=https://mainnet.base.org
 
-# Deploy to mainnet
-npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network base
+# Deploy upgradeable version to mainnet
+npx hardhat ignition deploy ignition/modules/PredictionMarket.ts --network base --verify
 
 # Use mainnet USDC: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 ```
 
+### Upgrading Contracts (UUPS)
+
+The contracts use the UUPS (Universal Upgradeable Proxy Standard) pattern, allowing you to upgrade the contract logic while preserving state and the contract address.
+
+#### Upgrade Existing Contract
+
+To upgrade an already-deployed UUPS proxy to a new implementation:
+
+```shell
+# Upgrade on Base Sepolia
+npm run upgrade:baseSepolia
+
+# Upgrade on Ethereum Sepolia
+npm run upgrade:sepolia
+
+# Or manually
+npx hardhat ignition deploy ignition/modules/UpgradePredictionMarket.ts --network baseSepolia --verify
+```
+
+The upgrade process:
+
+1. Hardhat Ignition reads the existing proxy address from deployment artifacts
+2. Deploys a new implementation contract with your updated code
+3. Calls `upgradeToAndCall()` on the proxy to point to the new implementation
+4. Preserves all existing state (markets, predictions, balances)
+5. Uses the same proxy address (no need to update frontend or backend)
+
+**Important**: Always interact with the **proxy address**, not the implementation address. The deployment automatically creates a proxy, and the sync script uses the proxy address.
+
 ### Sync Deployment to Backend
 
-After deploying to any network, sync the contract address to the backend:
+After deploying to any network (regular or upgradeable), sync the contract address to the backend:
 
 ```shell
 npm run sync-deployment

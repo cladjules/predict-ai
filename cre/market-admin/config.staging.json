@@ -1,6 +1,6 @@
 {
   "chainSelectorName": "ethereum-testnet-sepolia-base-1",
-  "contractAddress": "0x3BD07E308EE07bcFF55Fd398E83b6ceAF345e6fC",
+  "contractAddress": "0x63A739C5b9e9fEf64f71472E46311a7e1f732850",
   "creatorAddress": "0xe96F62C154967A69A13a0e43D5CA9b05f04673b6",
   "paymentToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   "generationSchedule": "0 0 * * * *",
