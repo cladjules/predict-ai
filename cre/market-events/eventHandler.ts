@@ -61,7 +61,7 @@ const updateMarketWithBlockchainId =
       // Update the market with blockchainId (keep contentHash for reference)
       const patchResponse = sendRequester
         .sendRequest({
-          url: `${backendUrl}/api/markets/${marketToUpdate._id}`,
+          url: `${backendUrl}/api/market/${marketToUpdate._id}`,
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -97,7 +97,7 @@ const storePredictionInBackend =
       // Store the prediction using the DB market _id
       const response = sendRequester
         .sendRequest({
-          url: `${backendUrl}/api/markets/${blockchainMarketId}/predictions`,
+          url: `${backendUrl}/api/market/${blockchainMarketId}/predictions`,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const updateMarketResolution =
       // Resolve the market using the DB marketId
       const response = sendRequester
         .sendRequest({
-          url: `${backendUrl}/api/markets/${blockchainMarketId}/resolve`,
+          url: `${backendUrl}/api/market/${blockchainMarketId}/resolve`,
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -136,7 +136,7 @@ const updateMarketResolution =
           },
           body: Buffer.from(
             JSON.stringify({
-              resolvedOutcome: outcomeIndex,
+              outcomeIndex: outcomeIndex,
             }),
           ).toString("base64"),
         })

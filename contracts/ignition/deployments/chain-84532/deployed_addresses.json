@@ -1,3 +1,6 @@
 {
-  "PredictionMarketModule#PredictionMarket": "0x3BD07E308EE07bcFF55Fd398E83b6ceAF345e6fC"
+  "PredictionMarketModule#PredictionMarket": "0x072152cF2CB918ed38de9BABA9275dc85F7b5c12",
+  "PredictionMarketModule#ERC1967Proxy": "0x63A739C5b9e9fEf64f71472E46311a7e1f732850",
+  "UpgradePredictionMarketModule#PredictionMarket": "0x63A739C5b9e9fEf64f71472E46311a7e1f732850",
+  "UpgradePredictionMarketModule#PredictionMarket_v1_1_0": "0xD4d1C7F3fE2B53431b47B146BabafFbaac97f8D2"
 }

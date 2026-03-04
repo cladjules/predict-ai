@@ -106,8 +106,8 @@ router.get("/markets", async (req, res) => {
   }
 });
 
-// GET /api/markets/:id - Fetch a specific market with predictions
-router.get("/markets/:id", async (req, res) => {
+// GET /api/market/:id - Fetch a specific market with predictions
+router.get("/market/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -133,13 +133,12 @@ router.get("/markets/:id", async (req, res) => {
   }
 });
 
-// GET /api/markets/active - Fetch markets eligible for resolution
+// GET /api/markets/active - Fetch markets still active
 router.get("/markets/active", async (req, res) => {
   try {
     // Find all active markets (status = 'active') and resolvesAt is in the past
     const activeMarkets = await Market.find({
       status: "active",
-      resolvesAt: { $lte: new Date() },
     }).sort({
       resolvesAt: -1,
     });
@@ -155,9 +154,9 @@ router.get("/markets/active", async (req, res) => {
   }
 });
 
-// POST /api/markets/:blockchainId/predictions - Add a prediction to a market
+// POST /api/market/:blockchainId/predictions - Add a prediction to a market
 router.post(
-  "/markets/:blockchainId/predictions",
+  "/market/:blockchainId/predictions",
   apiKeyMiddleware,
   async (req, res) => {
     try {
@@ -213,8 +212,8 @@ router.post(
   },
 );
 
-// PATCH /api/markets/:id - Update market with blockchain ID
-router.patch("/markets/:id", apiKeyMiddleware, async (req, res) => {
+// PATCH /api/market/:id - Update market with blockchain ID
+router.patch("/market/:id", apiKeyMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { blockchainId } = req.body;
@@ -241,17 +240,17 @@ router.patch("/markets/:id", apiKeyMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/markets/:blockchainId/resolve - Resolve a market
+// POST /api/market/:blockchainId/resolve - Resolve a market
 router.post(
-  "/markets/:blockchainId/resolve",
+  "/market/:blockchainId/resolve",
   apiKeyMiddleware,
   async (req, res) => {
     try {
       const { blockchainId } = req.params;
-      const { resolvedOutcome } = req.body;
+      const { outcomeIndex } = req.body;
 
-      if (resolvedOutcome === undefined || resolvedOutcome === null) {
-        return res.status(400).json({ error: "resolvedOutcome is required" });
+      if (outcomeIndex === undefined || outcomeIndex === null) {
+        return res.status(400).json({ error: "outcomeIndex is required" });
       }
 
       const market = await Market.findOne({ blockchainId });
@@ -263,13 +262,13 @@ router.post(
         return res.status(400).json({ error: "Market already resolved" });
       }
 
-      if (resolvedOutcome < 0 || resolvedOutcome >= market.outcomes.length) {
+      if (outcomeIndex < 0 || outcomeIndex >= market.outcomes.length) {
         return res
           .status(400)
           .json({ error: "Invalid resolved outcome index" });
       }
 
-      market.resolvedOutcome = resolvedOutcome;
+      market.outcomeIndex = outcomeIndex;
       market.status = "resolved";
       await market.save();
 

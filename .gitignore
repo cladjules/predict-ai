@@ -6,3 +6,5 @@ tmp*
 journal.jsonl
 artifacts/
 build-info/
+payment-x402-*
+.vscode*

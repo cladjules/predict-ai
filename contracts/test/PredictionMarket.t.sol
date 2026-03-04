@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "forge-std/Test.sol";
 import "../contracts/PredictionMarket.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 // Mock USDC token for testing
 contract MockUSDC is ERC20 {
@@ -30,10 +31,28 @@ contract PredictionMarketTest is Test {
     address public user3 = address(4);
     address public mockForwarder = address(0x999); // Mock Chainlink forwarder for testing
 
+    uint256 constant START_TIME = 1000;
     uint256 constant FINISH_TIME = 2000;
 
     function setUp() public {
-        market = new PredictionMarket(mockForwarder);
+        // Deploy implementation
+        PredictionMarket implementation = new PredictionMarket();
+
+        // Encode initialize call
+        bytes memory initData = abi.encodeWithSelector(
+            PredictionMarket.initialize.selector,
+            mockForwarder
+        );
+
+        // Deploy proxy
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
+
+        // Cast proxy to upgradeable contract interface
+        market = PredictionMarket(address(proxy));
+
         usdc = new MockUSDC();
 
         // Fund test accounts with ETH
@@ -57,7 +76,6 @@ contract PredictionMarketTest is Test {
 
         uint256 marketId = market.createMarket(
             2, // outcomeCount
-            START_TIME,
             FINISH_TIME,
             address(0) // ETH market
         );
@@ -81,12 +99,7 @@ contract PredictionMarketTest is Test {
     function testPlacePrediction() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp to betting period
@@ -112,12 +125,7 @@ contract PredictionMarketTest is Test {
     function testMultiplePredictions() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp to betting period
@@ -146,12 +154,7 @@ contract PredictionMarketTest is Test {
     function testResolveMarket() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp past finish time
@@ -172,12 +175,7 @@ contract PredictionMarketTest is Test {
     function testAutoPayoutOnResolve() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp to betting period
@@ -226,12 +224,7 @@ contract PredictionMarketTest is Test {
     function testCannotResolveNonCreator() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp past finish time
@@ -246,12 +239,7 @@ contract PredictionMarketTest is Test {
     function testCannotResolveBeforeFinish() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Try to resolve before finish time
@@ -264,12 +252,7 @@ contract PredictionMarketTest is Test {
     function testCannotBetBeforeStart() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Try to bet before start time
@@ -282,12 +265,7 @@ contract PredictionMarketTest is Test {
     function testCannotBetAfterFinish() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Try to bet after finish time
@@ -300,12 +278,7 @@ contract PredictionMarketTest is Test {
     function testCalculatePotentialWinnings() public {
         // Create market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp to betting period
@@ -355,12 +328,7 @@ contract PredictionMarketTest is Test {
     function testNoWinnersPayout() public {
         // Create market with 3 outcomes
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            3,
-            START_TIME,
-            FINISH_TIME,
-            address(0)
-        );
+        uint256 marketId = market.createMarket(3, FINISH_TIME, address(0));
         vm.stopPrank();
 
         // Warp to betting period
@@ -392,7 +360,6 @@ contract PredictionMarketTest is Test {
 
         uint256 marketId = market.createMarket(
             2, // outcomeCount
-            START_TIME,
             FINISH_TIME,
             address(usdc) // USDC market
         );
@@ -410,12 +377,7 @@ contract PredictionMarketTest is Test {
     function testPlacePredictionUSDC() public {
         // Create USDC market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(usdc)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(usdc));
         vm.stopPrank();
 
         // Warp to betting period
@@ -447,12 +409,7 @@ contract PredictionMarketTest is Test {
     function testMultiplePredictionsUSDC() public {
         // Create USDC market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(usdc)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(usdc));
         vm.stopPrank();
 
         // Warp to betting period
@@ -491,12 +448,7 @@ contract PredictionMarketTest is Test {
     function testAutoPayoutOnResolveUSDC() public {
         // Create USDC market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(usdc)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(usdc));
         vm.stopPrank();
 
         // Warp to betting period
@@ -565,12 +517,7 @@ contract PredictionMarketTest is Test {
     function testCannotSendETHToUSDCMarket() public {
         // Create USDC market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(usdc)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(usdc));
         vm.stopPrank();
 
         // Warp to betting period
@@ -586,12 +533,7 @@ contract PredictionMarketTest is Test {
     function testCannotUseUSDCWithoutApproval() public {
         // Create USDC market
         vm.startPrank(creator);
-        uint256 marketId = market.createMarket(
-            2,
-            START_TIME,
-            FINISH_TIME,
-            address(usdc)
-        );
+        uint256 marketId = market.createMarket(2, FINISH_TIME, address(usdc));
         vm.stopPrank();
 
         // Warp to betting period
@@ -609,13 +551,11 @@ contract PredictionMarketTest is Test {
         vm.startPrank(creator);
         uint256 ethMarketId = market.createMarket(
             2,
-            START_TIME,
             FINISH_TIME,
             address(0) // ETH
         );
         uint256 usdcMarketId = market.createMarket(
             2,
-            START_TIME,
             FINISH_TIME,
             address(usdc) // USDC
         );

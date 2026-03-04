@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./ReceiverTemplate.sol";
+import "./ReceiverTemplateUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,11 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @title PredictionMarket
  * @dev A decentralized prediction market contract where users can bet on outcomes
  * Supports both native ETH and any ERC20 token (e.g., USDC) for payments
- * Integrates with Chainlink CRE workflows via ReceiverTemplate
+ * Integrates with Chainlink CRE workflows via ReceiverTemplateUpgradeable
+ * Uses UUPS proxy pattern for upgradeability
  */
-contract PredictionMarket is ReceiverTemplate {
+contract PredictionMarket is ReceiverTemplateUpgradeable {
     using Address for address payable;
     using SafeERC20 for IERC20;
+
     struct Market {
         uint256 id;
         uint8 outcomeCount;
@@ -43,6 +45,9 @@ contract PredictionMarket is ReceiverTemplate {
     mapping(uint256 => Prediction) public predictions;
     mapping(address => uint256[]) public userPredictions;
     mapping(uint256 => uint256[]) public marketPredictions;
+
+    // Reserve storage gap for future upgrades (50 slots)
+    uint256[50] private __gap;
 
     // Events
     event MarketCreated(
@@ -84,11 +89,16 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 amount
     );
 
-    /// @notice Constructor sets up the contract with the Chainlink forwarder address
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initializer replaces constructor for upgradeable contracts
     /// @param _forwarderAddress The address of the Chainlink KeystoneForwarder contract
-    constructor(
-        address _forwarderAddress
-    ) ReceiverTemplate(_forwarderAddress) {}
+    function initialize(address _forwarderAddress) public initializer {
+        __ReceiverTemplate_init(_forwarderAddress);
+    }
 
     // Modifiers
     modifier marketExists(uint256 _marketId) {
@@ -185,7 +195,7 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 _marketId,
         uint8 _outcome,
         uint256 _amount
-    ) external payable marketExists(_marketId) marketNotResolved(_marketId) {
+    ) external payable {
         Market storage market = markets[_marketId];
 
         require(block.timestamp <= market.finishesAt, "Market finished");
@@ -226,7 +236,7 @@ contract PredictionMarket is ReceiverTemplate {
     function resolveMarket(
         uint256 _marketId,
         uint8 _winningOutcome
-    ) external onlyOwner marketExists(_marketId) marketNotResolved(_marketId) {
+    ) external onlyOwner {
         require(
             msg.sender == markets[_marketId].creator,
             "Only creator can resolve"
@@ -245,7 +255,10 @@ contract PredictionMarket is ReceiverTemplate {
      * @param _winningOutcome The winning outcome index
      * @notice Called by resolveMarket() after ownership checks or by _processReport() for CRE workflow
      */
-    function _resolveMarket(uint256 _marketId, uint8 _winningOutcome) internal {
+    function _resolveMarket(
+        uint256 _marketId,
+        uint8 _winningOutcome
+    ) internal marketExists(_marketId) marketNotResolved(_marketId) {
         require(
             _winningOutcome < markets[_marketId].outcomeCount,
             "Invalid outcome"
@@ -470,7 +483,7 @@ contract PredictionMarket is ReceiverTemplate {
         uint256 _marketId,
         uint8 _outcome,
         uint256 _amount
-    ) internal {
+    ) internal marketExists(_marketId) marketNotResolved(_marketId) {
         Market storage market = markets[_marketId];
 
         require(_predictor != address(0), "Invalid predictor address");
@@ -554,10 +567,6 @@ contract PredictionMarket is ReceiverTemplate {
             // Validate market exists and is not resolved
             require(marketId < marketCount, "Market does not exist");
             require(!markets[marketId].isResolved, "Market already resolved");
-            require(
-                block.timestamp > markets[marketId].finishesAt,
-                "Market not finished yet"
-            );
 
             // Call the internal resolution function
             _resolveMarket(marketId, winningOutcome);

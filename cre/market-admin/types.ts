@@ -1,9 +1,12 @@
 export interface PredictionMarket {
-  id?: number;
-  title: string;
+  _id?: string;
+  blockchainId?: string;
+  question: string;
   description: string;
-  options: string[];
-  resolvedOption?: string;
+  outcomes: string[];
+  outcomeIndex?: number;
   verificationUrl: string;
+  status: string;
+  contentHash: string;
   resolvesAt: string;
 }

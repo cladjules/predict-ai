@@ -1,12 +1,10 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 /**
- * Deployment module for PredictionMarket contract
+ * Deployment module for PredictionMarket contract using UUPS proxy
  */
 const PredictionMarketModule = buildModule("PredictionMarketModule", (m) => {
   // Forwarder addresses for CRE here: https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory-ts
-  // We choose the constructor args based on the active network.
-
   const creForwarders: Record<string, string> = {
     base: "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
     // Actual Production forwarder, for now, we need to use the mock below for simulation
@@ -21,9 +19,23 @@ const PredictionMarketModule = buildModule("PredictionMarketModule", (m) => {
     throw new Error(`No CRE forwarder configured for network: ${networkName}`);
   }
 
-  const predictionMarket = m.contract("PredictionMarket", [forwarderAddress]);
+  // Deploy the implementation contract
+  const predictionMarketImpl = m.contract("PredictionMarket");
 
-  return { predictionMarket };
+  // Encode the initialize function call
+  const initializeData = m.encodeFunctionCall(
+    predictionMarketImpl,
+    "initialize",
+    [forwarderAddress],
+  );
+
+  // Deploy the ERC1967Proxy
+  const predictionMarket = m.contract("ERC1967Proxy", [
+    predictionMarketImpl,
+    initializeData,
+  ]);
+
+  return { proxy: predictionMarket, implementation: predictionMarketImpl };
 });
 
 export default PredictionMarketModule;

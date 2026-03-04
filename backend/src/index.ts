@@ -3,6 +3,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import dbRoutes from "./dbRoutes";
 import paymentRoutes from "./paymentRoutes";
+import { getDeployedContractAddress } from "./utils";
 
 const app = express();
 const PORT = process.env.PORT || 4021;
@@ -26,12 +27,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", dbRoutes);
 
 // Payment routes (X402 protected)
-app.use("/x402", paymentRoutes);
+app.use("/", paymentRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
   const network = process.env.NETWORK;
-  const payTo = process.env.WALLET_RECIPIENT_ADDRESS;
+  const payTo = getDeployedContractAddress();
   res.json({
     status: "ok",
     network,
@@ -45,25 +46,25 @@ app.listen(PORT, () => {
   console.log(`🚀 X402 Server listening at http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`💳 Payment network: ${process.env.NETWORK}`);
-  console.log(`💰 Receiving address: ${process.env.WALLET_RECIPIENT_ADDRESS}`);
+  console.log(`💰 Receiving address: ${getDeployedContractAddress()}`);
   console.log(
     `🔗 Facilitator: ${process.env.FACILITATOR_URL || "https://www.x402.org/facilitator"}`,
   );
   console.log(`\n✅ Test the server:`);
-  console.log(`   - Public: http://localhost:${PORT}/x402`);
+  console.log(`   - Public: http://localhost:${PORT}`);
   console.log(
-    `   - Predictions (GET with paywall): http://localhost:${PORT}/x402/predict`,
+    `   - Predictions (GET with paywall): http://localhost:${PORT}/predict`,
   );
   console.log(
-    `   - Predictions (POST API - no paywall): http://localhost:${PORT}/x402/predict`,
+    `   - Predictions (POST API - no paywall): http://localhost:${PORT}/predict`,
   );
   console.log(`   - Health: http://localhost:${PORT}/health`);
   console.log(`\n📊 Database API (no payment required):`);
   console.log(`   - POST /api/markets - Create a market`);
   console.log(`   - GET /api/markets - Fetch all markets`);
-  console.log(`   - GET /api/markets/:marketId - Fetch specific market`);
-  console.log(`   - POST /api/markets/:marketId/predictions - Add prediction`);
-  console.log(`   - POST /api/markets/:marketId/resolve - Resolve market`);
+  console.log(`   - GET /api/market/:marketId - Fetch specific market`);
+  console.log(`   - POST /api/market/:marketId/predictions - Add prediction`);
+  console.log(`   - POST /api/market/:marketId/resolve - Resolve market`);
 });
 
 export default app;

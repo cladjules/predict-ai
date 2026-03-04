@@ -4,8 +4,10 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient, HTTPRequestContext } from "@x402/core/server";
 import { createPaywall } from "@x402/paywall";
 import { evmPaywall } from "@x402/paywall/evm";
-import { createJWT } from "./utils";
+import { createJWT, getDeployedContractAddress } from "./utils";
 import { Market, Prediction } from "./models";
+import * as fs from "fs";
+import * as path from "path";
 
 const router = express.Router();
 
@@ -17,8 +19,23 @@ const validateAmount = (amount: number): number => {
   return Math.max(MIN_AMOUNT, Math.min(MAX_AMOUNT, amount));
 };
 
-// Your receiving wallet address
-const payTo = process.env.WALLET_RECIPIENT_ADDRESS;
+// Save payment data to JSON file for CRE workflow simulation
+function savePaymentFile(prediction: any, predictionId: string): void {
+  try {
+    const creDir = path.join(__dirname, "../../cre");
+    const filename = `payment-x402-${predictionId}.json`;
+    const filepath = path.join(creDir, filename);
+
+    fs.writeFileSync(filepath, JSON.stringify(prediction, null, 2));
+    console.log(`💾 Saved payment file: ${filename}`);
+  } catch (error) {
+    console.error("Failed to save payment file:", error);
+    // Don't fail the request if file save fails
+  }
+}
+
+// Get deployed contract address (or fallback to env variable)
+const payTo = getDeployedContractAddress();
 
 // Create facilitator client (testnet by default)
 const facilitatorUrl =
@@ -30,9 +47,7 @@ const facilitatorClient = new HTTPFacilitatorClient({
 const network = process.env.NETWORK as `${string}:${string}`;
 
 if (!payTo || !network) {
-  console.error(
-    "Error: WALLET_RECIPIENT_ADDRESS or NETWORK is not set in environment variables.",
-  );
+  console.error("Error: NETWORK is not set in environment variables.");
   process.exit(1);
 }
 
@@ -94,21 +109,18 @@ async function handlePrediction(
   }
 
   // Look up the market to get its blockchainId
-  const market = await Market.findById(marketId);
+  const market = await Market.findOne({ blockchainId: marketId });
   if (!market) {
     throw new Error("Market not found");
-  }
-
-  if (!market.blockchainId) {
-    throw new Error("Market not yet deployed to blockchain");
   }
 
   let payer = "unknown";
   let x402TxHash = "";
   let asset = "";
 
-  // Try to extract payer wallet address from X-Payment header
-  const xPaymentHeader = req.header("X-Payment");
+  // Try to extract payer wallet address from payment-signature header
+  const xPaymentHeader = req.header("payment-signature");
+
   if (xPaymentHeader) {
     try {
       // For ExactEvmScheme, payload is either:
@@ -137,12 +149,12 @@ async function handlePrediction(
         asset = decoded.asset;
       }
     } catch (e) {
-      console.error("Failed to decode X-Payment header:", e);
+      console.error("Failed to decode payment-signature header:", e);
     }
   }
 
   const prediction = {
-    marketId: market.blockchainId, // Use blockchain market ID for CRE workflow
+    marketId, // Use blockchain market ID for CRE workflow
     outcomeIndex: parseInt(String(outcomeIndex)),
     amount: numAmount,
     payer,
@@ -151,8 +163,24 @@ async function handlePrediction(
     timestamp: new Date().toISOString(),
   };
 
-  console.log("Will process prediction:", prediction);
+  console.log(
+    "Will process prediction for ",
+    marketId,
+    " with amount ",
+    numAmount,
+    " from payer ",
+    payer,
+  );
 
+  // Generate unique ID and save payment file for CRE simulation
+  const predictionId = `${marketId.slice(0, 8)}_${Date.now()}`;
+  savePaymentFile(prediction, predictionId);
+
+  if (process.env.SIMULATE === "true") {
+    console.log("Simulating CRE workflow execution...");
+    console.log("Workflow input:", prediction);
+    return { prediction, predictionId };
+  }
   // CRE HTTP Trigger JWT Auth
   const creUrl = process.env.CRE_TRIGGER_URL;
   const creParams = {
@@ -169,12 +197,6 @@ async function handlePrediction(
     creParams,
     process.env.WALLET_PRIVATE_KEY as `0x${string}`,
   );
-  if (process.env.SIMULATE === "true") {
-    console.log("Simulating CRE workflow execution...");
-    console.log("Workflow input:", creParams.params.input);
-    console.log("Workflow ID:", creParams.params.workflow.workflowID);
-    return prediction;
-  }
 
   const response = await (
     await fetch(creUrl!, {
@@ -194,28 +216,7 @@ async function handlePrediction(
 
   console.log("CRE workflow triggered successfully:", response);
 
-  // Save prediction to database
-  const MONGODB_URI = process.env.MONGODB_URI;
-  if (MONGODB_URI) {
-    try {
-      const dbPrediction = new Prediction({
-        market: marketId, // MongoDB ObjectId
-        payer: prediction.payer,
-        outcomeIndex: prediction.outcomeIndex,
-        amount: prediction.amount,
-        paymentToken: prediction.paymentToken,
-        x402TxHash: prediction.x402TxHash,
-        timestamp: new Date(prediction.timestamp),
-      });
-      await dbPrediction.save();
-      console.log("Prediction saved to database");
-    } catch (dbError) {
-      console.error("Failed to save prediction to database:", dbError);
-      // Don't fail the request if DB save fails
-    }
-  }
-
-  return prediction;
+  return { prediction, predictionId };
 }
 
 // Public route: Homepage with prediction form
@@ -334,14 +335,14 @@ router.get("/", (req, res) => {
             Fill out the form and submit. You'll see a paywall to connect your wallet and pay with USDC. After payment, your prediction will be processed.</p>
           </div>
 
-          <form method="GET" action="/x402/predict">
+          <form method="GET" action="/predict">
             <div class="form-group">
-              <label for="marketId">Market ID</label>
+              <label for="marketId">Market ID (Blockchain ID)</label>
               <input 
                 type="text" 
                 id="marketId" 
                 name="marketId" 
-                placeholder="e.g., market_123"
+                placeholder="e.g., 1"
                 required
               />
               <div class="input-hint">The unique identifier for the prediction market</div>
@@ -398,7 +399,7 @@ router.get("/predict", async (req, res) => {
   }
 
   try {
-    const prediction = await handlePrediction(
+    const { prediction } = await handlePrediction(
       marketId as string,
       outcomeIndex as string,
       amount as string,
@@ -494,7 +495,7 @@ router.get("/predict", async (req, res) => {
               </div>
             </div>
 
-            <a href="/x402">← Submit Another Prediction</a>
+            <a href="/">← Submit Another Prediction</a>
           </div>
         </body>
       </html>
@@ -515,7 +516,7 @@ router.post("/predict", async (req, res) => {
   }
 
   try {
-    const prediction = await handlePrediction(
+    const { prediction, predictionId } = await handlePrediction(
       marketId,
       outcomeIndex,
       amount,
@@ -525,6 +526,7 @@ router.post("/predict", async (req, res) => {
     res.json({
       success: true,
       prediction,
+      paymentFile: `payment-x402-${predictionId}.json`,
       message: "Prediction generated successfully",
     });
   } catch (error) {

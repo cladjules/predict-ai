@@ -89,3 +89,48 @@ export const sha256 = (data: any): string => {
 // Helper function to convert base64 string to base64url by replacing URL-unsafe characters
 export const base64URLEncode = (str: string): string =>
   str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+
+/**
+ * Get deployed contract address from local deployment config
+ *
+ * Run 'npm run sync-deployment' in the contracts folder to update the config
+ */
+export const getDeployedContractAddress = (): string => {
+  const network = process.env.NETWORK as `${string}:${string}` | undefined;
+
+  if (!network) {
+    console.warn("⚠️  NETWORK env variable not set");
+    return "";
+  }
+
+  // Extract chain ID from network (e.g., "eip155:8453" -> "8453")
+  const chainId = network.split(":")[1];
+
+  try {
+    const fs = require("fs");
+    const path = require("path");
+
+    // Path to local deployment config
+    const configPath = path.join(__dirname, "deployed-contracts.json");
+
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      const chainConfig = config[chainId];
+
+      if (chainConfig?.PredictionMarket) {
+        console.log(
+          `✅ Loaded contract address for chain ${chainId}: ${chainConfig.PredictionMarket}`,
+        );
+        return chainConfig.PredictionMarket;
+      }
+    }
+
+    console.warn(
+      `⚠️  No deployment found for chain ${chainId}, using env fallback`,
+    );
+  } catch (error) {
+    console.error("❌ Error reading deployment config:", error);
+  }
+
+  return "";
+};
