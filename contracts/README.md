@@ -1,6 +1,6 @@
 # Prediction Market Smart Contracts
 
-Smart contracts for the Predict AI platform. Built with Solidity and Hardhat.
+Smart contracts for the Predict AI platform. Supports ETH and ERC20 (USDC) markets with upgradeable proxy pattern and Chainlink CRE integration.
 
 ## Quickstart
 
@@ -13,7 +13,7 @@ npx hardhat test
 
 ## Overview
 
-The primary contract is `PredictionMarket.sol`. It supports ETH and ERC20 payments, time-bounded markets, and on-chain recording of predictions submitted via Chainlink CRE forwarders. The contract uses the UUPS (Universal Upgradeable Proxy Standard) pattern for upgradeability.
+The primary contract is `PredictionMarket.sol`. It supports ETH and ERC20 payments, time-bounded markets, and on-chain recording of predictions submitted via Chainlink CRE forwarders. The contract uses the UUPS (Universal Upgradeable Proxy Standard) pattern for upgradeability and includes automatic proportional payouts to winners.
 
 ## Security & Access Control
 

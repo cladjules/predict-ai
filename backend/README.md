@@ -1,4 +1,4 @@
-# X402 Crypto Payment Server + Database API
+# Backend Server
 
 Express.js server with two main components:
 
@@ -16,6 +16,7 @@ cp .env.example .env
 #   - NETWORK: eip155:84532 (Base Sepolia) or eip155:8453 (Base)
 #   - MONGODB_URI: Your MongoDB connection string
 #   - API_KEY: Secure key for CRE workflows to access API
+#   - FACILITATOR_URL: X402 facilitator URL
 npm run dev
 ```
 
@@ -25,65 +26,85 @@ Server starts at `http://localhost:4021`
 
 ### X402 Payment Routes
 
+User-facing endpoints for placing predictions with crypto payments:
+
 - `GET /` - Interactive form UI for submitting predictions
 - `GET /predict` - Protected prediction endpoint with paywall
 - `POST /predict` - API endpoint for predictions (no paywall)
 - Automatic payment verification and blockchain settlement
-- Integration with Chainlink CRE workflows
+- USDC payment support on Base Sepolia and Base Mainnet
 
-### Database API Routes (Protected)
+### Database API Routes
 
-All `/api/*` routes for managing markets and predictions:
+REST API for CRE workflows to manage markets and predictions:
 
 **Public (No Auth Required):**
 
 - `GET /api/markets` - Fetch all markets with predictions
 - `GET /api/market/:marketId` - Fetch specific market
-- `GET /api/markets/active` - Fetch active markets that can be resolved now
+- `GET /api/markets/active` - Fetch active markets ready for resolution
 
-**Protected (Requires x-api-key header):**
+**Protected (Requires `x-api-key` header):**
 
 - `POST /api/markets` - Create new market
-- `POST /api/market/:marketId/predictions` - Add prediction
-- `POST /api/market/:marketId/resolve` - Resolve market
-
-See [API.md](./API.md) for complete API documentation.
+- `POST /api/market/:marketId/predictions` - Add prediction to market
+- `POST /api/market/:marketId/resolve` - Resolve market with outcome
 
 ## Environment Variables
 
-| Variable             | Description                      | Required |
-| -------------------- | -------------------------------- | -------- |
-| `WALLET_PRIVATE_KEY` | Private key for signing          | Yes      |
-| `NETWORK`            | EIP-155 chain ID (84532 or 8453) | Yes      |
-| `MONGODB_URI`        | MongoDB connection string        | Yes      |
-| `API_KEY`            | API key for CRE workflows        | Yes      |
-| `FACILITATOR_URL`    | X402 facilitator URL             | Yes      |
-| `CRE_TRIGGER_URL`    | Chainlink CRE gateway URL        | Optional |
-| `CRE_WORKFLOW_ID`    | CRE workflow ID                  | Optional |
-| `PORT`               | Server port (default: 4021)      | No       |
-| `SIMULATE`           | Skip blockchain calls (dev mode) | No       |
+| Variable             | Description                                          | Required |
+| -------------------- | ---------------------------------------------------- | -------- |
+| `WALLET_PRIVATE_KEY` | Private key for signing transactions                 | Yes      |
+| `NETWORK`            | EIP-155 chain ID (eip155:84532 or eip155:8453)       | Yes      |
+| `MONGODB_URI`        | MongoDB connection string                            | Yes      |
+| `API_KEY`            | API key for CRE workflows to access protected routes | Yes      |
+| `FACILITATOR_URL`    | X402 facilitator URL                                 | Yes      |
+| `CRE_TRIGGER_URL`    | Chainlink CRE gateway URL for market-events workflow | Optional |
+| `CRE_WORKFLOW_ID`    | CRE workflow ID for market-events trigger            | Optional |
+| `PORT`               | Server port (default: 4021)                          | No       |
+| `SIMULATE`           | Skip blockchain calls (dev mode)                     | No       |
 
 ## Architecture
 
+The backend serves as the central data layer between users, CRE workflows, and the blockchain:
+
 ```
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
-│   Browser   │─────▶│  X402 Server │─────▶│  MongoDB    │
-│   (User)    │◀─────│  (Backend)   │◀─────│  Database   │
+│   Browser   │─────▶│   Backend    │─────▶│  MongoDB    │
+│   (User)    │◀─────│  (Express)   │◀─────│  Database   │
 └─────────────┘      └──────────────┘      └─────────────┘
-                            │                      ▲
+                            ▲                      ▲
+                            │                      │
+                   X402 Payment                    │
                             │                      │
                             ▼                      │
                      ┌──────────────┐             │
-                     │ CRE Workflows│─────────────┘
-                     │  (Chainlink) │
+                     │     CRE      │─────────────┘
+                     │  Workflows   │
                      └──────────────┘
-                            │
-                            ▼
-                     ┌──────────────┐
-                     │   Contract   │
-                     │  (Base L2)   │
-                     └──────────────┘
+                        │        │
+              ┌─────────┘        └─────────┐
+              ▼                            ▼
+       ┌─────────────┐            ┌─────────────┐
+       │market-admin │            │market-events│
+       │  (Claude)   │            │  (Trigger)  │
+       └─────────────┘            └─────────────┘
+              │                            │
+              └────────────┬───────────────┘
+                           ▼
+                    ┌──────────────┐
+                    │   Contract   │
+                    │  (Base L2)   │
+                    └──────────────┘
 ```
+
+**Flow:**
+
+1. Users submit predictions via X402 payment (USDC)
+2. Backend stores predictions in MongoDB
+3. CRE `market-admin` workflow generates markets via Claude AI
+4. CRE `market-events` workflow processes payments and on-chain events
+5. Both workflows interact with blockchain contracts for on-chain recording
 
 ## Development
 
