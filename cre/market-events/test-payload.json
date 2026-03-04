@@ -1,9 +1,0 @@
-{
-  "marketId": "0",
-  "outcomeIndex": 0,
-  "amount": 0.1,
-  "payer": "0x2e6a5b3c3F0a2387d8c17A4693cFdD45765C3c5A",
-  "paymentToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  "x402TxHash": "0x53988615b2c8c1fd8b7699133e2b95dd1e1bd7b22b9fad5c63601cd92e401ec02eae154e5e8bfde759c370a29465a124f093914985be688b98eaff99f1b119d31c",
-  "timestamp": "2026-03-02T17:42:15.193Z"
-}

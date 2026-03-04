@@ -14,12 +14,13 @@ import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { PredictionMarket } from "./types";
 import { Config } from "./generationHandler";
 import { getNetwork } from "./utils";
+import { TextDecoder } from "util";
 
 // Backend resolution update removed - now handled by eventHandler listening to MarketResolved events
 // const updateMarketResolution = ...
 
-const fetchActiveMarkets =
-  (apiKey: string, runtime: Runtime<Config>) =>
+const fetchMarketsToResolve =
+  (apiKey: string, forceResolve: boolean, runtime: Runtime<Config>) =>
   (sendRequester: HTTPSendRequester) => {
     // Fetch markets from backend database that are eligible for resolution
     let eligibleMarkets: PredictionMarket[] = [];
@@ -55,6 +56,10 @@ const fetchActiveMarkets =
           `WARNING: Failed to fetch markets from database. Status: ${response.statusCode}`,
         );
       }
+    }
+
+    if (forceResolve) {
+      return eligibleMarkets.map((market) => ({ ...market, outcomeIndex: 0 }));
     }
 
     // Filter markets where resolvesAt is in the past
@@ -99,18 +104,19 @@ const fetchActiveMarkets =
     const marketsList = marketsToResolve
       .map(
         (market, idx) =>
-          `${idx + 1}. Title: "${market.title}"
+          `${idx + 1}. Question: "${market.question}"
    Description: "${market.description}"
-   Options: ${market.options.join(", ")}
+   Verification URL: "${market.verificationUrl}"
+   Outcomes: ${market.outcomes.join(", ")}
    Expected Resolution: ${market.resolvesAt}`,
       )
       .join("\n\n");
 
-    const prompt = `Check which of the following prediction markets have resolved. For each market that has resolved, provide the outcome from the available options. For markets that have not resolved yet, skip them.
+    const prompt = `Check which of the following prediction markets have resolved. For each market that has resolved, provide the outcome from the available outcomes. For markets that have not resolved yet, skip them.
 
 ${marketsList}
 
-Return your response as a JSON array with objects containing: { "marketIndex": number (1-based), "resolved": boolean, "outcome": string (the winning option or explanation) }
+Return your response as a JSON array with objects containing: { "marketIndex": number (1-based), "resolved": boolean, "outcomeIndex": number (0-based) (the winning option from the outcomes array) }
 
 Only include markets that have resolved. Return an empty array [] if none have resolved.`;
 
@@ -160,7 +166,7 @@ Only include markets that have resolved. Return an empty array [] if none have r
     const results = JSON.parse(jsonMatch[0]) as Array<{
       marketIndex: number;
       resolved: boolean;
-      outcome: string;
+      outcomeIndex: number;
     }>;
 
     // Map results back to markets
@@ -168,7 +174,7 @@ Only include markets that have resolved. Return an empty array [] if none have r
       .filter((r) => r.resolved)
       .map((r) => ({
         ...marketsToResolve[r.marketIndex - 1],
-        resolvedOption: r.outcome,
+        outcomeIndex: r.outcomeIndex,
       }));
 
     return resolvedMarkets;
@@ -177,6 +183,7 @@ Only include markets that have resolved. Return an empty array [] if none have r
 export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
   runtime.log("Market resolution-checks triggered.");
 
+  // Normal Claude-based resolution
   const secretResult = runtime.getSecret({
     id: "CLAUDE_API_KEY",
   });
@@ -198,12 +205,13 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
     runtime.log("ERROR: BACKEND_API_KEY not found in secrets");
     return "Error: Missing API key";
   }
+  const forceResolve = !!runtime.config.forceResolve;
 
   const httpClient = new HTTPClient();
   const resolvedMarkets = httpClient
     .sendRequest(
       runtime,
-      fetchActiveMarkets(apiKey, runtime),
+      fetchMarketsToResolve(apiKey, forceResolve, runtime),
       consensusIdenticalAggregation<PredictionMarket[]>(),
     )()
     .result();
@@ -211,6 +219,8 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
   runtime.log(
     `Resolved ${resolvedMarkets.length} markets: ${JSON.stringify(resolvedMarkets)}`,
   );
+
+  const onChainTXs = [];
 
   // Send resolution to contract for each resolved market
   if (resolvedMarkets.length > 0) {
@@ -238,21 +248,10 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
 
     for (const market of resolvedMarkets) {
       try {
-        // Find the winning outcome index
-        const winningOutcomeIndex = market.options.indexOf(
-          market.resolvedOption!,
-        );
-
-        if (winningOutcomeIndex === -1) {
-          runtime.log(
-            `ERROR: Could not find outcome "${market.resolvedOption}" in market options`,
-          );
-          continue;
-        }
-
         runtime.log(
-          `Encoding resolution for market ${market.id || "unknown"}: outcome ${winningOutcomeIndex}`,
+          `Encoding resolution for market ${market.blockchainId || "unknown"}: outcome ${market.outcomeIndex}`,
         );
+        runtime.log("yp");
 
         // Encode resolution data for PredictionMarket._processReport()
         // Format: (uint8 opType, uint256 marketId, uint8 winningOutcome)
@@ -263,8 +262,8 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
           ),
           [
             1, // opType 1 for resolution
-            BigInt(market.id || 0),
-            winningOutcomeIndex,
+            BigInt(market.blockchainId || 0),
+            market.outcomeIndex ?? 0,
           ],
         );
 
@@ -293,8 +292,10 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
           // TxStatus.SUCCESS
           const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
           runtime.log(
-            `✅ Market ${market.id} resolved on-chain: ${txHash} - Outcome: ${market.resolvedOption}`,
+            `✅ Market ${market.blockchainId} resolved on-chain: ${txHash} - Outcome: (${market.outcomes[market.outcomeIndex ?? 0]})`,
           );
+
+          onChainTXs.push(txHash);
 
           // Backend database sync now handled by eventHandler listening to MarketResolved event
           runtime.log(
@@ -302,16 +303,16 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
           );
         } else {
           runtime.log(
-            `ERROR: Failed to resolve market ${market.id} on-chain. Status: ${writeResult.txStatus}`,
+            `ERROR: Failed to resolve market ${market.blockchainId} on-chain. Status: ${writeResult.txStatus}`,
           );
         }
       } catch (error) {
         runtime.log(
-          `ERROR: Failed to process resolution for market ${market.id}: ${error}`,
+          `ERROR: Failed to process resolution for market ${market.blockchainId}: ${error}`,
         );
       }
     }
   }
 
-  return `Resolved ${resolvedMarkets.length} markets`;
+  return `Resolved ${resolvedMarkets.length} markets with txs: ${onChainTXs.join(", ")}`;
 };

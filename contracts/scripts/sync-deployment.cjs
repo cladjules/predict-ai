@@ -4,7 +4,7 @@
  * Run this after deploying contracts: npm run sync-deployment
  *
  * Updates:
- * - backend/deployed-contracts.json
+ * - backend/src/deployed-contracts.json
  * - cre/market-admin/config.staging.json (for Base Sepolia)
  * - cre/market-admin/config.production.json (for Base Mainnet)
  * - cre/market-events/config.staging.json (for Base Sepolia)
@@ -24,7 +24,7 @@ const CHAIN_CONFIGS = {
 
 const backendConfigPath = path.join(
   __dirname,
-  "../../backend/deployed-contracts.json",
+  "../../backend/src/deployed-contracts.json",
 );
 
 const CRE_MODULES = ["market-admin", "market-events"];
@@ -101,7 +101,7 @@ async function syncDeployment() {
     JSON.stringify(backendConfig, null, 2) + "\n",
   );
 
-  console.log(`\n✅ Synced to backend/deployed-contracts.json`);
+  console.log(`\n✅ Synced to backend/src/deployed-contracts.json`);
   console.log(`✅ Updated all CRE config files`);
 }
 

@@ -6,6 +6,8 @@ import { createPaywall } from "@x402/paywall";
 import { evmPaywall } from "@x402/paywall/evm";
 import { createJWT, getDeployedContractAddress } from "./utils";
 import { Market, Prediction } from "./models";
+import * as fs from "fs";
+import * as path from "path";
 
 const router = express.Router();
 
@@ -16,6 +18,21 @@ const MAX_AMOUNT = 10.0;
 const validateAmount = (amount: number): number => {
   return Math.max(MIN_AMOUNT, Math.min(MAX_AMOUNT, amount));
 };
+
+// Save payment data to JSON file for CRE workflow simulation
+function savePaymentFile(prediction: any, predictionId: string): void {
+  try {
+    const creDir = path.join(__dirname, "../../cre");
+    const filename = `payment-x402-${predictionId}.json`;
+    const filepath = path.join(creDir, filename);
+
+    fs.writeFileSync(filepath, JSON.stringify(prediction, null, 2));
+    console.log(`💾 Saved payment file: ${filename}`);
+  } catch (error) {
+    console.error("Failed to save payment file:", error);
+    // Don't fail the request if file save fails
+  }
+}
 
 // Get deployed contract address (or fallback to env variable)
 const payTo = getDeployedContractAddress();
@@ -155,6 +172,15 @@ async function handlePrediction(
     payer,
   );
 
+  // Generate unique ID and save payment file for CRE simulation
+  const predictionId = `${marketId.slice(0, 8)}_${Date.now()}`;
+  savePaymentFile(prediction, predictionId);
+
+  if (process.env.SIMULATE === "true") {
+    console.log("Simulating CRE workflow execution...");
+    console.log("Workflow input:", prediction);
+    return { prediction, predictionId };
+  }
   // CRE HTTP Trigger JWT Auth
   const creUrl = process.env.CRE_TRIGGER_URL;
   const creParams = {
@@ -166,12 +192,6 @@ async function handlePrediction(
       workflow: { workflowID: process.env.CRE_WORKFLOW_ID },
     },
   };
-  if (process.env.SIMULATE === "true") {
-    console.log("Simulating CRE workflow execution...");
-    console.log("Workflow input:", creParams.params.input);
-    console.log("Workflow ID:", creParams.params.workflow.workflowID);
-    return prediction;
-  }
 
   const jwt = await createJWT(
     creParams,
@@ -196,28 +216,7 @@ async function handlePrediction(
 
   console.log("CRE workflow triggered successfully:", response);
 
-  // Save prediction to database
-  const MONGODB_URI = process.env.MONGODB_URI;
-  if (MONGODB_URI) {
-    try {
-      const dbPrediction = new Prediction({
-        market: marketId, // MongoDB ObjectId
-        payer: prediction.payer,
-        outcomeIndex: prediction.outcomeIndex,
-        amount: prediction.amount,
-        paymentToken: prediction.paymentToken,
-        x402TxHash: prediction.x402TxHash,
-        timestamp: new Date(prediction.timestamp),
-      });
-      await dbPrediction.save();
-      console.log("Prediction saved to database");
-    } catch (dbError) {
-      console.error("Failed to save prediction to database:", dbError);
-      // Don't fail the request if DB save fails
-    }
-  }
-
-  return prediction;
+  return { prediction, predictionId };
 }
 
 // Public route: Homepage with prediction form
@@ -400,7 +399,7 @@ router.get("/predict", async (req, res) => {
   }
 
   try {
-    const prediction = await handlePrediction(
+    const { prediction } = await handlePrediction(
       marketId as string,
       outcomeIndex as string,
       amount as string,
@@ -517,7 +516,7 @@ router.post("/predict", async (req, res) => {
   }
 
   try {
-    const prediction = await handlePrediction(
+    const { prediction, predictionId } = await handlePrediction(
       marketId,
       outcomeIndex,
       amount,
@@ -527,6 +526,7 @@ router.post("/predict", async (req, res) => {
     res.json({
       success: true,
       prediction,
+      paymentFile: `payment-x402-${predictionId}.json`,
       message: "Prediction generated successfully",
     });
   } catch (error) {

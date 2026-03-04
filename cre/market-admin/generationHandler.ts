@@ -27,6 +27,7 @@ export type Config = {
   contractAddress?: string;
   creatorAddress?: string;
   paymentToken?: string;
+  forceResolve?: boolean;
 };
 
 const CLAUDE_PROMPT = `You are a prediction market generator. Create 3 diverse and interesting prediction markets that people would want to bet on.
@@ -34,9 +35,9 @@ const CLAUDE_PROMPT = `You are a prediction market generator. Create 3 diverse a
 Date now is ${new Date().toISOString()}, make sure they all resolve in the future.
 
 For each market, provide:
-- title: A clear, concise title (max 100 chars)
+- question: A clear, concise question (max 100 chars)
 - description: Detailed context and any relevant information (max 500 chars)
-- options: 2-4 possible outcomes as an array of strings
+- outcomes: 2-4 possible outcomes as an array of strings
 - verificationUrl: A credible source URL that can be used to verify the outcome
 - resolvesAt: ISO 8601 date when the market should resolve (between 1 week and 6 months from now)
 
@@ -46,9 +47,9 @@ Ensure outcomes are clear, verifiable, and mutually exclusive.
 Return ONLY a valid JSON array of objects matching this exact structure:
 [
   {
-    "title": "string",
+    "question": "string",
     "description": "string",
-    "options": ["string", "string"],
+    "outcomes": ["string", "string"],
     "verificationUrl": "string",
     "resolvesAt": "2024-12-31T23:59:59Z"
   }
@@ -208,10 +209,10 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
           encodePacked(
             ["string", "string", "address", "uint8", "uint256", "address"],
             [
-              market.title,
+              market.question,
               market.description || "",
               creatorAddress,
-              market.options.length,
+              market.outcomes.length,
               finishesAt,
               paymentToken,
             ],
@@ -219,9 +220,9 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
         );
 
         return {
-          question: market.title,
+          question: market.question,
           description: market.description,
-          outcomes: market.options,
+          outcomes: market.outcomes,
           resolvesAt: market.resolvesAt,
           contentHash: contentHash,
         };
@@ -254,6 +255,8 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
             return marketsJson;
           }
 
+          const onChainTXs = [];
+
           // Now create markets on-chain using the same params
           for (let i = 0; i < response.markets.length; i++) {
             const dbMarket = response.markets[i];
@@ -265,7 +268,7 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
             );
 
             runtime.log(
-              `Creating market on-chain: "${dbMarket.question}" with ${originalMarket.options.length} outcomes`,
+              `Creating market on-chain: "${dbMarket.question}" with ${originalMarket.outcomes.length} outcomes`,
             );
             runtime.log(`  Content Hash: ${dbMarket.contentHash}`);
 
@@ -278,7 +281,7 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
               ),
               [
                 2, // opType 2 for market creation
-                originalMarket.options.length,
+                originalMarket.outcomes.length,
                 finishesAt,
                 paymentToken,
                 creatorAddress,
@@ -316,6 +319,8 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
                 `✅ Market created on-chain: ${txHash} - "${dbMarket.question}"`,
               );
 
+              onChainTXs.push(txHash);
+
               // Backend database sync now handled by eventHandler listening to MarketCreated event
             } else {
               runtime.log(
@@ -324,7 +329,7 @@ export const onGenerationTrigger = (runtime: Runtime<Config>): string => {
             }
           }
 
-          return `Created ${response.markets.length} markets`;
+          return `Created ${response.markets.length} markets with txs: ${onChainTXs.join(", ")}`;
         } catch (error) {
           runtime.log(`ERROR: Failed to process markets creation": ${error}`);
         }

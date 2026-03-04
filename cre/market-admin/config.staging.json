@@ -5,5 +5,6 @@
   "paymentToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   "generationSchedule": "0 0 * * * *",
   "resolutionSchedule": "0 30 * * * *",
-  "backendUrl": "http://localhost:4021"
+  "backendUrl": "http://localhost:4021",
+  "forceResolve": true
 }

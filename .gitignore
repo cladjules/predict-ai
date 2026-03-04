@@ -6,3 +6,4 @@ tmp*
 journal.jsonl
 artifacts/
 build-info/
+payment-x402-*

@@ -201,12 +201,12 @@ After deploying to any network (regular or upgradeable), sync the contract addre
 npm run sync-deployment
 ```
 
-This copies the deployed contract address from Hardhat Ignition's deployment files to `backend/deployed-contracts.json`, which the backend reads at runtime to automatically configure the correct contract address based on the network.
+This copies the deployed contract address from Hardhat Ignition's deployment files to `backend/src/deployed-contracts.json`, which the backend reads at runtime to automatically configure the correct contract address based on the network.
 
 **How it works:**
 
 - Reads from `ignition/deployments/chain-{chainId}/deployed_addresses.json`
-- Writes to `backend/deployed-contracts.json` with network-specific addresses
+- Writes to `backend/src/deployed-contracts.json` with network-specific addresses
 - Backend automatically selects the right address based on `NETWORK` env variable
 
 **Important:** Run this after every deployment to keep the backend in sync!

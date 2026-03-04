@@ -38,14 +38,14 @@ All `/api/*` routes for managing markets and predictions:
 **Public (No Auth Required):**
 
 - `GET /api/markets` - Fetch all markets with predictions
-- `GET /api/markets/:marketId` - Fetch specific market
+- `GET /api/market/:marketId` - Fetch specific market
 - `GET /api/markets/active` - Fetch active markets that can be resolved now
 
 **Protected (Requires x-api-key header):**
 
 - `POST /api/markets` - Create new market
-- `POST /api/markets/:marketId/predictions` - Add prediction
-- `POST /api/markets/:marketId/resolve` - Resolve market
+- `POST /api/market/:marketId/predictions` - Add prediction
+- `POST /api/market/:marketId/resolve` - Resolve market
 
 See [API.md](./API.md) for complete API documentation.
 

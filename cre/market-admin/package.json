@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "simulate": "cd .. && cre workflow simulate market-admin -T staging-settings --broadcast",
-    "simulate:prod": "cd .. && cre workflow simulate market-admin -T production-settings --broadcast",
     "deploy": "cd .. && cre workflow deploy market-admin -T staging-settings",
     "deploy:prod": "cd .. && cre workflow deploy market-admin -T production-settings"
   },

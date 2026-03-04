@@ -195,7 +195,7 @@ contract PredictionMarket is ReceiverTemplateUpgradeable {
         uint256 _marketId,
         uint8 _outcome,
         uint256 _amount
-    ) external payable marketExists(_marketId) marketNotResolved(_marketId) {
+    ) external payable {
         Market storage market = markets[_marketId];
 
         require(block.timestamp <= market.finishesAt, "Market finished");
@@ -236,7 +236,7 @@ contract PredictionMarket is ReceiverTemplateUpgradeable {
     function resolveMarket(
         uint256 _marketId,
         uint8 _winningOutcome
-    ) external onlyOwner marketExists(_marketId) marketNotResolved(_marketId) {
+    ) external onlyOwner {
         require(
             msg.sender == markets[_marketId].creator,
             "Only creator can resolve"
@@ -255,7 +255,10 @@ contract PredictionMarket is ReceiverTemplateUpgradeable {
      * @param _winningOutcome The winning outcome index
      * @notice Called by resolveMarket() after ownership checks or by _processReport() for CRE workflow
      */
-    function _resolveMarket(uint256 _marketId, uint8 _winningOutcome) internal {
+    function _resolveMarket(
+        uint256 _marketId,
+        uint8 _winningOutcome
+    ) internal marketExists(_marketId) marketNotResolved(_marketId) {
         require(
             _winningOutcome < markets[_marketId].outcomeCount,
             "Invalid outcome"
@@ -480,7 +483,7 @@ contract PredictionMarket is ReceiverTemplateUpgradeable {
         uint256 _marketId,
         uint8 _outcome,
         uint256 _amount
-    ) internal {
+    ) internal marketExists(_marketId) marketNotResolved(_marketId) {
         Market storage market = markets[_marketId];
 
         require(_predictor != address(0), "Invalid predictor address");

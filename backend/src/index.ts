@@ -62,9 +62,9 @@ app.listen(PORT, () => {
   console.log(`\n📊 Database API (no payment required):`);
   console.log(`   - POST /api/markets - Create a market`);
   console.log(`   - GET /api/markets - Fetch all markets`);
-  console.log(`   - GET /api/markets/:marketId - Fetch specific market`);
-  console.log(`   - POST /api/markets/:marketId/predictions - Add prediction`);
-  console.log(`   - POST /api/markets/:marketId/resolve - Resolve market`);
+  console.log(`   - GET /api/market/:marketId - Fetch specific market`);
+  console.log(`   - POST /api/market/:marketId/predictions - Add prediction`);
+  console.log(`   - POST /api/market/:marketId/resolve - Resolve market`);
 });
 
 export default app;

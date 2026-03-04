@@ -4,6 +4,7 @@
   "description": "Express server using X402 for crypto payments",
   "main": "dist/index.js",
   "scripts": {
+    "check-data": "cd scripts && tsx check-data.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"

@@ -4,8 +4,9 @@ export interface IMarket extends Document {
   blockchainId?: string;
   question: string;
   description?: string;
+  verificationUrl?: string;
   outcomes: string[];
-  resolvedOutcome?: number;
+  outcomeIndex?: number;
   resolvesAt: Date;
   status: "active" | "resolved" | "cancelled";
   // Content hash for matching with blockchain MarketCreated events
@@ -30,8 +31,9 @@ const MarketSchema = new Schema<IMarket>(
     blockchainId: { type: String, index: true },
     question: { type: String, required: true },
     description: { type: String },
+    verificationUrl: { type: String },
     outcomes: [{ type: String, required: true }],
-    resolvedOutcome: { type: Number },
+    outcomeIndex: { type: Number },
     resolvesAt: { type: Date, default: Date.now },
     status: {
       type: String,
