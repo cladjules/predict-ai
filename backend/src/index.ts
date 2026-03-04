@@ -23,6 +23,9 @@ if (MONGODB_URI) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from public directory
+app.use(express.static("public"));
+
 // Database routes (no payment required)
 app.use("/api", dbRoutes);
 
@@ -51,7 +54,7 @@ app.listen(PORT, () => {
     `🔗 Facilitator: ${process.env.FACILITATOR_URL || "https://www.x402.org/facilitator"}`,
   );
   console.log(`\n✅ Test the server:`);
-  console.log(`   - Public: http://localhost:${PORT}`);
+  console.log(`   - Frontend: http://localhost:${PORT}`);
   console.log(
     `   - Predictions (GET with paywall): http://localhost:${PORT}/predict`,
   );

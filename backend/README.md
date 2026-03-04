@@ -24,11 +24,20 @@ Server starts at `http://localhost:4021`
 
 ## Features
 
+### Frontend UI
+
+Interactive web interface for viewing and interacting with prediction markets:
+
+- `GET /` - Main page displaying all active markets
+- Real-time market data fetching from API
+- Auto-refresh every 30 seconds
+- Responsive design with beautiful gradients
+- Market cards showing status, predictions, volume, and deadlines
+
 ### X402 Payment Routes
 
 User-facing endpoints for placing predictions with crypto payments:
 
-- `GET /` - Interactive form UI for submitting predictions
 - `GET /predict` - Protected prediction endpoint with paywall
 - `POST /predict` - API endpoint for predictions (no paywall)
 - Automatic payment verification and blockchain settlement

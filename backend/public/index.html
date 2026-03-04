@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRE Predictions - AI-Powered Markets</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+          "Ubuntu", "Cantarell", sans-serif;
+        background: #0a0a0a;
+        color: #ffffff;
+        min-height: 100vh;
+      }
+
+      /* Navigation */
+      nav {
+        background: #1a1a1a;
+        border-bottom: 1px solid #2a2a2a;
+        padding: 16px 0;
+      }
+
+      .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: #2a2a2a;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 32px;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      .nav-links a:hover {
+        color: #fff;
+      }
+
+      .connect-wallet-btn {
+        background: #1e90ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .connect-wallet-btn:hover {
+        background: #1873cc;
+      }
+
+      /* Hero Section */
+      .hero {
+        text-align: center;
+        padding: 60px 24px 40px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        line-height: 1.2;
+      }
+
+      .hero p {
+        font-size: 18px;
+        color: #999;
+        margin-bottom: 32px;
+      }
+
+      .hero-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-bottom: 32px;
+      }
+
+      .btn-primary {
+        background: #1e90ff;
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .btn-primary:hover {
+        background: #1873cc;
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: #1e90ff;
+        border: 2px solid #1e90ff;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background: #1e90ff;
+        color: white;
+      }
+
+      .hero-stats {
+        display: flex;
+        justify-content: center;
+        gap: 48px;
+        margin-top: 40px;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1e90ff;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #999;
+        margin-top: 4px;
+      }
+
+      /* Filter Tabs */
+      .filter-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px 24px;
+      }
+
+      .filter-tabs {
+        display: flex;
+        gap: 12px;
+        border-bottom: 1px solid #2a2a2a;
+        padding-bottom: 16px;
+      }
+
+      .filter-tab {
+        background: transparent;
+        color: #999;
+        border: 1px solid #2a2a2a;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .filter-tab:hover {
+        color: #fff;
+        border-color: #3a3a3a;
+      }
+
+      .filter-tab.active {
+        background: #1e90ff;
+        color: white;
+        border-color: #1e90ff;
+      }
+
+      /* Markets Grid */
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px 40px;
+      }
+
+      .markets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 20px;
+      }
+
+      .market-card {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .market-card:hover {
+        border-color: #3a3a3a;
+        transform: translateY(-2px);
+      }
+
+      .market-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .market-icon {
+        width: 48px;
+        height: 48px;
+        background: #2a2a2a;
+        border-radius: 8px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .market-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .market-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+
+      .market-meta {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .market-stats-row {
+        display: flex;
+        gap: 16px;
+        margin: 16px 0;
+      }
+
+      .market-stat {
+        flex: 1;
+      }
+
+      .market-stat-label {
+        font-size: 11px;
+        color: #666;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+
+      .market-stat-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .market-progress {
+        margin: 12px 0;
+      }
+
+      .progress-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 12px;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: #2a2a2a;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        border-radius: 4px;
+        transition: width 0.3s;
+      }
+
+      .progress-fill.red {
+        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      }
+
+      .market-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #2a2a2a;
+      }
+
+      .market-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+      }
+
+      .status-resolved {
+        background: rgba(107, 114, 128, 0.15);
+        color: #9ca3af;
+      }
+
+      .market-confidence {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #10b981;
+      }
+
+      .confidence-high {
+        color: #10b981;
+      }
+
+      .confidence-low {
+        color: #ef4444;
+      }
+
+      .trade-market-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #1e90ff;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      /* Modal */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal {
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 32px;
+        position: relative;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        color: #999;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+      }
+
+      .modal-close:hover {
+        color: #fff;
+      }
+
+      .modal h2 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .modal-subtitle {
+        color: #999;
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+
+      .info-box {
+        background: rgba(30, 144, 255, 0.1);
+        border-left: 3px solid #1e90ff;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #ccc;
+        line-height: 1.5;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0a0a0a;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 16px;
+        transition: border-color 0.2s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #1e90ff;
+      }
+
+      .form-group input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .input-hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 6px;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 14px;
+        background: #1e90ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 8px;
+      }
+
+      .submit-btn:hover {
+        background: #1873cc;
+      }
+
+      .network-info {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #2a2a2a;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .loading {
+        text-align: center;
+        color: #999;
+        padding: 60px 20px;
+        font-size: 16px;
+      }
+
+      .error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+        color: #ef4444;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+      }
+
+      .empty-state h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+
+      .empty-state p {
+        font-size: 16px;
+        color: #999;
+      }
+
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 36px;
+        }
+
+        .hero-stats {
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .markets-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .modal {
+          padding: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-container">
+        <div class="logo">
+          <div class="logo-icon">🔮</div>
+          <span>CRE Predictions</span>
+        </div>
+        <div class="nav-links">
+          <a href="#markets">Markets</a>
+          <a href="#ai-insight">AI Insight</a>
+          <a href="#docs">Docs</a>
+          <button class="connect-wallet-btn">Connect Wallet</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+      <p style="color: #666; font-size: 14px; margin-bottom: 8px;">AI-powered prediction markets secured by Chainlink CRE</p>
+      <h1>Trade the Future with<br />Verifiable AI</h1>
+      <p>Make predictions on real-world events powered by Claude AI and secured by decentralized oracles</p>
+      
+      <div class="hero-buttons">
+        <button class="btn-primary" onclick="document.getElementById('markets-section').scrollIntoView({behavior: 'smooth'})">
+          Explore Markets
+        </button>
+        <button class="btn-secondary" onclick="alert('View AI Insights')">View AI Insights</button>
+      </div>
+
+      <div class="hero-stats" id="stats">
+        <div class="stat-item">
+          <span class="stat-value">$0</span>
+          <span class="stat-label">Trading Volume</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Active Markets</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">0%</span>
+          <span class="stat-label">Avg. Accuracy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Total Predictions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-container" id="markets-section">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Trending Markets</button>
+        <button class="filter-tab" data-filter="ai-crowd">AI vs Crowd Divergence</button>
+        <button class="filter-tab" data-filter="trending">Trending Markets</button>
+      </div>
+    </div>
+
+    <!-- Markets Grid -->
+    <div class="container">
+      <div id="error-container"></div>
+      <div id="loading" class="loading">Loading markets...</div>
+      <div id="markets-container"></div>
+    </div>
+
+    <!-- Prediction Modal -->
+    <div class="modal-overlay" id="prediction-modal">
+      <div class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h2 id="modal-title">Make Your Prediction</h2>
+        <p class="modal-subtitle" id="modal-subtitle">Pay with USDC to submit your prediction</p>
+        
+        <div class="info-box">
+          <strong>💳 How it works:</strong> Select your prediction and amount, then connect your wallet to pay with USDC. After payment confirmation, your prediction will be recorded on-chain.
+        </div>
+
+        <form id="prediction-form" method="GET" action="/predict">
+          <input type="hidden" id="marketId" name="marketId" />
+          
+          <div class="form-group">
+            <label for="market-display">Market</label>
+            <input 
+              type="text" 
+              id="market-display" 
+              disabled
+              style="background: #2a2a2a; border-color: #2a2a2a;"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="outcomeIndex">Your Prediction</label>
+            <select id="outcomeIndex" name="outcomeIndex" required>
+              <option value="">Select outcome...</option>
+            </select>
+            <div class="input-hint">Choose which outcome you predict will occur</div>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Bet Amount (USDC)</label>
+            <input 
+              type="number" 
+              id="amount" 
+              name="amount" 
+              placeholder="Enter amount"
+              min="0.1"
+              max="10.0"
+              step="0.01"
+              value="1.00"
+              required
+            />
+            <div class="input-hint">Amount: $0.10 - $10.00 USDC</div>
+          </div>
+
+          <button type="submit" class="submit-btn">Submit Prediction 💰</button>
+        </form>
+
+        <div class="network-info" id="network-info">
+          <strong>Network:</strong> <span id="network-name">Loading...</span><br>
+          <strong>Payment:</strong> X402 with USDC
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = window.location.origin;
+      let allMarkets = [];
+      let currentMarket = null;
+
+      // Format date
+      function formatDate(dateString) {
+        if (!dateString) return "TBA";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = date - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (days < 0) return "Ended";
+        if (days === 0) return "Ends today";
+        if (days === 1) return "Ends tomorrow";
+        return `Ends ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      }
+
+      // Calculate AI confidence
+      function calculateAIConfidence(market) {
+        // Simulate AI confidence based on market data
+        const predictions = market.predictions?.length || 0;
+        if (predictions === 0) return { value: 75, label: "High" };
+        
+        // More predictions = higher confidence (simulated)
+        const confidence = Math.min(95, 60 + predictions * 2);
+        const label = confidence >= 75 ? "High" : "Low";
+        return { value: confidence, label };
+      }
+
+      // Get AI vs crowd divergence
+      function getAICrowdDivergence(market) {
+        // Simulated - would come from actual AI analysis
+        const totalYes = market.predictions?.filter(p => p.outcome === "YES").length || 0;
+        const totalNo = market.predictions?.filter(p => p.outcome === "NO").length || 0;
+        const total = totalYes + totalNo;
+        
+        if (total === 0) return 72; // Default AI prediction
+        
+        const crowdYes = (totalYes / total) * 100;
+        return crowdYes;
+      }
+
+      // Create market card
+      function createMarketCard(market) {
+        const outcomes = market.outcomes || ["YES", "NO"];
+        const totalPredictions = market.totalPredictions || market.predictions?.length || 0;
+        const confidence = calculateAIConfidence(market);
+        const aiPrediction = getAICrowdDivergence(market);
+        const crowdPrediction = 100 - aiPrediction;
+
+        return `
+          <div class="market-card" onclick='${market.status === "active" ? `openPredictionModal(${JSON.stringify(market).replace(/'/g, "&#39;")})` : ""}'>
+            <div class="market-header">
+              <div class="market-icon">🏠</div>
+              <div class="market-info">
+                <div class="market-title">${market.title || market.question}</div>
+                <div class="market-meta">Ends: ${formatDate(market.deadline || market.resolutionDate)}</div>
+              </div>
+            </div>
+
+            <div class="market-stats-row">
+              <div class="market-stat">
+                <div class="market-stat-label">AI</div>
+                <div class="market-stat-value" style="color: #10b981">${Math.round(aiPrediction)}%</div>
+              </div>
+              <div class="market-stat">
+                <div class="market-stat-label">Crowd</div>
+                <div class="market-stat-value" style="color: #ef4444">${Math.round(crowdPrediction)}%</div>
+              </div>
+              <div class="market-stat">
+                <div class="market-stat-label">Divergence</div>
+                <div class="market-stat-value">${Math.abs(Math.round(aiPrediction - crowdPrediction))}%</div>
+              </div>
+            </div>
+
+            <div class="market-progress">
+              <div class="progress-labels">
+                <span style="color: #10b981">AI: ${outcomes[0] || "YES"}</span>
+                <span style="color: #ef4444">Crowd: ${outcomes[1] || "NO"}</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${aiPrediction}%"></div>
+              </div>
+            </div>
+
+            <div class="market-footer">
+              <div>
+                <div class="market-status ${market.status === 'active' ? 'status-active' : 'status-resolved'}">
+                  <span>●</span> ${market.status === 'active' ? 'Active' : 'Resolved'}
+                </div>
+              </div>
+              <div class="market-confidence confidence-${confidence.label.toLowerCase()}">
+                🎯 Confidence: ${confidence.label}
+              </div>
+              <a href="#" class="trade-market-btn" onclick="event.stopPropagation(); event.preventDefault(); openPredictionModal(${JSON.stringify(market).replace(/'/g, "&#39;")})">
+                Trade Market →
+              </a>
+            </div>
+          </div>
+        `;
+      }
+
+      // Open prediction modal
+      function openPredictionModal(market) {
+        currentMarket = market;
+        const modal = document.getElementById('prediction-modal');
+        const marketId = market._id || market.id || market.blockchainId || '1';
+        const outcomes = market.outcomes || ["YES", "NO"];
+        
+        // Set form values
+        document.getElementById('marketId').value = market.blockchainId || marketId;
+        document.getElementById('modal-title').textContent = market.title || market.question;
+        document.getElementById('modal-subtitle').textContent = market.description || 'Pay with USDC to submit your prediction';
+        document.getElementById('market-display').value = (market.title || market.question).substring(0, 60) + '...';
+        
+        // Populate outcome select
+        const select = document.getElementById('outcomeIndex');
+        select.innerHTML = '<option value="">Select outcome...</option>' +
+          outcomes.map((outcome, index) => 
+            `<option value="${index}">${outcome}</option>`
+          ).join('');
+        
+        modal.classList.add('active');
+      }
+
+      // Close modal
+      function closeModal() {
+        document.getElementById('prediction-modal').classList.remove('active');
+        currentMarket = null;
+      }
+
+      // Close modal on overlay click
+      document.getElementById('prediction-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'prediction-modal') {
+          closeModal();
+        }
+      });
+
+      // Fetch and display markets
+      async function fetchMarkets() {
+        const loadingEl = document.getElementById('loading');
+        const marketsContainer = document.getElementById('markets-container');
+        const errorContainer = document.getElementById('error-container');
+
+        try {
+          loadingEl.style.display = 'block';
+          errorContainer.innerHTML = '';
+
+          const response = await fetch(`${API_BASE}/api/markets`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          console.log('Markets data:', data);
+
+          loadingEl.style.display = 'none';
+
+          allMarkets = data.markets || data || [];
+
+          if (allMarkets.length === 0) {
+            marketsContainer.innerHTML = `
+              <div class="empty-state">
+                <h2>📊 No Markets Yet</h2>
+                <p>Markets will be generated automatically by our AI agent. Check back soon!</p>
+              </div>
+            `;
+            return;
+          }
+
+          // Update stats
+          updateStats(allMarkets);
+
+          // Display markets
+          const marketsHTML = allMarkets.map(market => createMarketCard(market)).join('');
+          marketsContainer.innerHTML = `<div class="markets-grid">${marketsHTML}</div>`;
+
+        } catch (error) {
+          console.error('Error fetching markets:', error);
+          loadingEl.style.display = 'none';
+          errorContainer.innerHTML = `
+            <div class="error">
+              <strong>❌ Error loading markets:</strong> ${error.message}
+            </div>
+          `;
+        }
+      }
+
+      // Update hero stats
+      function updateStats(markets) {
+        const totalVolume = markets.reduce((sum, m) => sum + (m.totalVolume || 0), 0);
+        const totalPredictions = markets.reduce((sum, m) => sum + (m.totalPredictions || m.predictions?.length || 0), 0);
+        const activeMarkets = markets.filter(m => m.status === 'active').length;
+        
+        const stats = document.getElementById('stats');
+        stats.children[0].querySelector('.stat-value').textContent = `$${totalVolume.toFixed(2)}`;
+        stats.children[1].querySelector('.stat-value').textContent = activeMarkets;
+        stats.children[2].querySelector('.stat-value').textContent = '78.6%'; // Mock accuracy
+        stats.children[3].querySelector('.stat-value').textContent = totalPredictions;
+      }
+
+      // Fetch network info
+      fetch(`${API_BASE}/health`)
+        .then(res => res.json())
+        .then(data => {
+          const network = data.network === 'eip155:8453' ? 'Base Mainnet' : 'Base Sepolia';
+          document.getElementById('network-name').textContent = network;
+        })
+        .catch(() => {
+          document.getElementById('network-name').textContent = 'Base Sepolia';
+        });
+
+      // Filter tabs (placeholder)
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+        });
+      });
+
+      // Auto-refresh every 30 seconds
+      setInterval(fetchMarkets, 30000);
+
+      // Initial load
+      fetchMarkets();
+    </script>
+  </body>
+</html>
