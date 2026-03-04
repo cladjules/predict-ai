@@ -62,7 +62,7 @@ REST API for CRE workflows to manage markets and predictions:
 | `CRE_TRIGGER_URL`    | Chainlink CRE gateway URL for market-events workflow | Optional |
 | `CRE_WORKFLOW_ID`    | CRE workflow ID for market-events trigger            | Optional |
 | `PORT`               | Server port (default: 4021)                          | No       |
-| `SIMULATE`           | Skip blockchain calls (dev mode)                     | No       |
+| `SIMULATE_CRE`       | Skip CRE calls (dev mode)                            | No       |
 
 ## Architecture
 

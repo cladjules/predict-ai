@@ -176,7 +176,7 @@ async function handlePrediction(
   const predictionId = `${marketId.slice(0, 8)}_${Date.now()}`;
   savePaymentFile(prediction, predictionId);
 
-  if (process.env.SIMULATE === "true") {
+  if (process.env.SIMULATE_CRE === "true") {
     console.log("Simulating CRE workflow execution...");
     console.log("Workflow input:", prediction);
     return { prediction, predictionId };
