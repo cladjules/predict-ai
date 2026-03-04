@@ -233,18 +233,6 @@ npm run simulate
    npm run simulate
    ```
 
-### End-to-End Testing
-
-```bash
-cd cre
-npm run create-market                                    # Create test market
-npm run list-markets                                     # View all markets
-npm run test:e2e generate-payment <id> <outcome> <amt> <wallet>  # Submit prediction
-npm run check-data                                       # Check balances
-npm run resolve-bypass                                   # Resolve markets
-npm run check-data                                       # Verify payouts
-```
-
 ## Project Structure
 
 ```

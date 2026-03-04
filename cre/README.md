@@ -162,42 +162,6 @@ graph TB
 - `eventHandler.ts` - Blockchain event processing
 - `workflow.yaml` - CRE workflow configuration
 
-## 🧪 End-to-End Testing
-
-Comprehensive E2E testing suite for the complete market lifecycle:
-
-```bash
-cd cre
-npm install
-
-# Complete test flow
-npm run create-market                                      # Create test market
-npm run list-markets                                       # View all markets
-npm run test:e2e generate-payment <id> <outcome> <amount> <wallet>  # Submit prediction
-npm run check-data                                         # Check USDC balances
-npm run resolve-bypass                                     # Resolve markets (outcome 0)
-npm run check-data                                         # Verify payouts
-```
-
-### Testing Commands
-
-| Command                  | Description                                  |
-| ------------------------ | -------------------------------------------- |
-| `npm run create-market`  | Create a test market in database             |
-| `npm run list-markets`   | List all markets with predictions            |
-| `npm run check-data`     | Check USDC balances (3 wallets + contract)   |
-| `npm run resolve-bypass` | Force resolve all active markets (outcome 0) |
-
-### Manual Market Resolution (Testing)
-
-For testing purposes, bypass Claude and resolve all active markets with outcome 0:
-
-```bash
-npm run resolve-bypass
-```
-
-This sets `FORCE_RESOLVE=true` and resolves all active markets immediately.
-
 ## Project Structure
 
 ```
