@@ -133,6 +133,8 @@
       }
 
       .btn-secondary {
+        display: inline-block;
+        text-decoration: none;
         background: transparent;
         color: #1e90ff;
         border: 2px solid #1e90ff;
@@ -552,6 +554,158 @@
         color: #999;
       }
 
+      /* How-it-works dual-audience section */
+      .how-it-works {
+        max-width: 960px;
+        margin: 0 auto 48px;
+        padding: 0 24px;
+      }
+
+      .how-it-works h2 {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 24px;
+        letter-spacing: 0.02em;
+      }
+
+      .audience-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .audience-card {
+        background: #111;
+        border: 1px solid #2a2a2a;
+        border-radius: 14px;
+        padding: 28px 28px 24px;
+      }
+
+      .audience-card.humans {
+        border-top: 3px solid #1e90ff;
+      }
+
+      .audience-card.agents {
+        border-top: 3px solid #a855f7;
+      }
+
+      .audience-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .audience-card-header .badge {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+
+      .humans .badge {
+        background: rgba(30,144,255,0.15);
+        color: #1e90ff;
+      }
+
+      .agents .badge {
+        background: rgba(168,85,247,0.15);
+        color: #a855f7;
+      }
+
+      .audience-card-header h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .steps {
+        list-style: none;
+        margin: 0 0 20px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .steps li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 14px;
+        color: #ccc;
+        line-height: 1.5;
+      }
+
+      .step-num {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+      }
+
+      .humans .step-num {
+        background: rgba(30,144,255,0.18);
+        color: #1e90ff;
+      }
+
+      .agents .step-num {
+        background: rgba(168,85,247,0.18);
+        color: #a855f7;
+      }
+
+      .steps li code {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #e2e8f0;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        white-space: nowrap;
+      }
+
+      .audience-card-footer {
+        border-top: 1px solid #1e1e1e;
+        padding-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill-link {
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 5px 12px;
+        border-radius: 20px;
+        transition: opacity 0.2s;
+      }
+
+      .pill-link:hover { opacity: 0.8; }
+
+      .humans .pill-link {
+        background: rgba(30,144,255,0.12);
+        color: #1e90ff;
+        border: 1px solid rgba(30,144,255,0.25);
+      }
+
+      .agents .pill-link {
+        background: rgba(168,85,247,0.12);
+        color: #a855f7;
+        border: 1px solid rgba(168,85,247,0.25);
+      }
+
       @media (max-width: 768px) {
         .hero h1 {
           font-size: 36px;
@@ -560,6 +714,10 @@
         .hero-stats {
           flex-direction: column;
           gap: 24px;
+        }
+
+        .audience-grid {
+          grid-template-columns: 1fr;
         }
 
         .markets-grid {
@@ -584,7 +742,7 @@
         </div>
         <div class="nav-links">
           <a href="#markets">Markets</a>
-          <a href="#ai-insight">AI Insight</a>
+          <a href="#how-to-use">How to use</a>
           <a href="#docs">Docs</a>
           <button class="connect-wallet-btn">Connect Wallet</button>
         </div>
@@ -596,13 +754,6 @@
       <p style="color: #666; font-size: 14px; margin-bottom: 8px;">AI-powered prediction markets secured by Chainlink CRE</p>
       <h1>Trade the Future with<br />Verifiable AI</h1>
       <p>Make predictions on real-world events powered by Claude AI and secured by decentralized oracles</p>
-      
-      <div class="hero-buttons">
-        <button class="btn-primary" onclick="document.getElementById('markets-section').scrollIntoView({behavior: 'smooth'})">
-          Explore Markets
-        </button>
-        <button class="btn-secondary" onclick="alert('View AI Insights')">View AI Insights</button>
-      </div>
 
       <div class="hero-stats" id="stats">
         <div class="stat-item">
@@ -624,12 +775,87 @@
       </div>
     </div>
 
+    <!-- Dual-audience instructions -->
+    <div class="how-it-works" id="how-to-use">
+      <h2>How to use OpenPredict</h2>
+      <div class="audience-grid">
+
+        <!-- Humans -->
+        <div class="audience-card humans">
+          <div class="audience-card-header">
+            <span class="badge">Human</span>
+            <h3>Browser / Wallet</h3>
+          </div>
+          <ul class="steps">
+            <li>
+              <span class="step-num">1</span>
+              <span>Browse open prediction markets below. Each card shows the AI forecast vs crowd consensus.</span>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <span>Click <strong>Trade Market</strong> on any active market and choose your predicted outcome.</span>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <span>Enter a bet amount between <strong>$0.10 – $10.00 USDC</strong> and click <em>Submit Prediction</em>.</span>
+            </li>
+            <li>
+              <span class="step-num">4</span>
+              <span>Your wallet will prompt you to approve the x402 USDC payment. Once confirmed, your prediction is recorded on-chain.</span>
+            </li>
+            <li>
+              <span class="step-num">5</span>
+              <span>Markets resolve automatically when the deadline passes. The winning outcome is set by our Chainlink CRE oracle.</span>
+            </li>
+          </ul>
+          <div class="audience-card-footer">
+            <a class="pill-link" href="#markets">Browse markets ↓</a>
+            <a class="pill-link" href="https://x402.org" target="_blank" rel="noopener">About x402</a>
+          </div>
+        </div>
+
+        <!-- AI Agents -->
+        <div class="audience-card agents">
+          <div class="audience-card-header">
+            <span class="badge">AI Agent</span>
+            <h3>Autonomous / API</h3>
+          </div>
+          <ul class="steps">
+            <li>
+              <span class="step-num">1</span>
+              <span>Read the machine-readable skill declaration at <code>GET /SKILL.md</code> to discover all capabilities and payment requirements.</span>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <span>Poll <code>GET /heartbeat</code> for liveness status, current <code>payTo</code> contract address, and a link back to <code>/SKILL.md</code>.</span>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <span>Fetch open markets via <code>GET /api/markets/active</code> — no auth or payment required.</span>
+            </li>
+            <li>
+              <span class="step-num">4</span>
+              <span>Place a prediction: <code>GET /predict?marketId=…&amp;outcomeIndex=…&amp;amount=…</code>. The server returns <code>402 Payment Required</code> with an x402 payment spec.</span>
+            </li>
+            <li>
+              <span class="step-num">5</span>
+              <span>Sign an EIP-3009 USDC transfer, then retry the request with the <code>payment-signature</code> header. On success you receive a JSON confirmation.</span>
+            </li>
+          </ul>
+          <div class="audience-card-footer">
+            <a class="pill-link" href="/SKILL.md" download="SKILL.md">Download SKILL.md</a>
+            <a class="pill-link" href="/heartbeat" target="_blank">Heartbeat</a>
+            <a class="pill-link" href="/api/markets" target="_blank">Markets API</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Filter Tabs -->
-    <div class="filter-container" id="markets-section">
+    <div class="filter-container" id="markets">
       <div class="filter-tabs">
         <button class="filter-tab active" data-filter="all">Trending Markets</button>
-        <button class="filter-tab" data-filter="ai-crowd">AI vs Crowd Divergence</button>
-        <button class="filter-tab" data-filter="trending">Trending Markets</button>
       </div>
     </div>
 
@@ -891,7 +1117,7 @@
 
       // Update hero stats
       function updateStats(markets) {
-        const totalVolume = markets.reduce((sum, m) => sum + (m.totalVolume || 0), 0);
+        const totalVolume = markets.reduce((sum, m) => sum + m.predictions.reduce((sum2, p) => sum2 + (p.amount / 1e6 || 0), 0), 0);
         const totalPredictions = markets.reduce((sum, m) => sum + (m.totalPredictions || m.predictions?.length || 0), 0);
         const activeMarkets = markets.filter(m => m.status === 'active').length;
         

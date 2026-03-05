@@ -44,6 +44,23 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Heartbeat — machine-readable liveness endpoint for autonomous AI agents
+const startTime = Date.now();
+app.get("/heartbeat", (req, res) => {
+  const network = process.env.NETWORK;
+  const payTo = getDeployedContractAddress();
+  res.json({
+    status: "ok",
+    service: "open-predict.io",
+    version: "1.0.0",
+    skill: "https://open-predict.io/SKILL.md",
+    network,
+    payTo,
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 X402 Server listening at http://localhost:${PORT}`);
@@ -61,7 +78,9 @@ app.listen(PORT, () => {
   console.log(
     `   - Predictions (POST API - no paywall): http://localhost:${PORT}/predict`,
   );
-  console.log(`   - Health: http://localhost:${PORT}/health`);
+  console.log(`   - Health:     http://localhost:${PORT}/health`);
+  console.log(`   - Heartbeat:  http://localhost:${PORT}/heartbeat`);
+  console.log(`   - Skill:      http://localhost:${PORT}/SKILL.md`);
   console.log(`\n📊 Database API (no payment required):`);
   console.log(`   - POST /api/markets - Create a market`);
   console.log(`   - GET /api/markets - Fetch all markets`);
