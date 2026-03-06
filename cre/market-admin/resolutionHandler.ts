@@ -251,7 +251,6 @@ export const onResolutionTrigger = (runtime: Runtime<Config>): string => {
         runtime.log(
           `Encoding resolution for market ${market.blockchainId || "unknown"}: outcome ${market.outcomeIndex}`,
         );
-        runtime.log("yp");
 
         // Encode resolution data for PredictionMarket._processReport()
         // Format: (uint8 opType, uint256 marketId, uint8 winningOutcome)

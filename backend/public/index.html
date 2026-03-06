@@ -276,56 +276,91 @@
         color: #666;
       }
 
-      .market-stats-row {
+      /* Outcome bars */
+      .outcome-list {
         display: flex;
-        gap: 16px;
-        margin: 16px 0;
+        flex-direction: column;
+        gap: 10px;
+        margin: 14px 0;
       }
 
-      .market-stat {
-        flex: 1;
+      .outcome-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        row-gap: 4px;
+        column-gap: 10px;
+        align-items: center;
       }
 
-      .market-stat-label {
-        font-size: 11px;
-        color: #666;
-        text-transform: uppercase;
-        margin-bottom: 4px;
+      .outcome-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        min-width: 0;
       }
 
-      .market-stat-value {
-        font-size: 16px;
+      .outcome-name {
         font-weight: 600;
-        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .market-progress {
-        margin: 12px 0;
+      .leading-badge {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: rgba(16,185,129,0.15);
+        color: #10b981;
+        padding: 1px 6px;
+        border-radius: 10px;
+        flex-shrink: 0;
       }
 
-      .progress-labels {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 12px;
+      .outcome-tally {
+        font-size: 11px;
+        color: #555;
+        flex-shrink: 0;
+        margin-left: auto;
       }
 
-      .progress-bar {
-        height: 8px;
-        background: #2a2a2a;
-        border-radius: 4px;
+      .outcome-bar-wrap {
+        grid-column: 1;
+        height: 6px;
+        background: #222;
+        border-radius: 3px;
         overflow: hidden;
       }
 
-      .progress-fill {
+      .outcome-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-        border-radius: 4px;
-        transition: width 0.3s;
+        border-radius: 3px;
+        transition: width 0.4s ease;
+        min-width: 2px;
       }
 
-      .progress-fill.red {
-        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+      .outcome-pct {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        font-size: 15px;
+        font-weight: 700;
+        text-align: right;
+        align-self: center;
+      }
+
+      .no-pred-note {
+        font-size: 12px;
+        color: #555;
+        font-style: italic;
+        margin-top: 2px;
+      }
+
+      .market-totals {
+        font-size: 12px;
+        color: #555;
       }
 
       .market-footer {
@@ -356,22 +391,6 @@
       .status-resolved {
         background: rgba(107, 114, 128, 0.15);
         color: #9ca3af;
-      }
-
-      .market-confidence {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        color: #10b981;
-      }
-
-      .confidence-high {
-        color: #10b981;
-      }
-
-      .confidence-low {
-        color: #ef4444;
       }
 
       .trade-market-btn {
@@ -765,8 +784,8 @@
           <span class="stat-label">Active Markets</span>
         </div>
         <div class="stat-item">
-          <span class="stat-value">0%</span>
-          <span class="stat-label">Avg. Accuracy</span>
+          <span class="stat-value">0</span>
+          <span class="stat-label">Resolved Markets</span>
         </div>
         <div class="stat-item">
           <span class="stat-value">0</span>
@@ -789,7 +808,7 @@
           <ul class="steps">
             <li>
               <span class="step-num">1</span>
-              <span>Browse open prediction markets below. Each card shows the AI forecast vs crowd consensus.</span>
+              <span>Browse open prediction markets below. Each card shows real prediction counts and which outcome is currently leading.</span>
             </li>
             <li>
               <span class="step-num">2</span>
@@ -943,86 +962,87 @@
         return `Ends ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
       }
 
-      // Calculate AI confidence
-      function calculateAIConfidence(market) {
-        // Simulate AI confidence based on market data
-        const predictions = market.predictions?.length || 0;
-        if (predictions === 0) return { value: 75, label: "High" };
-        
-        // More predictions = higher confidence (simulated)
-        const confidence = Math.min(95, 60 + predictions * 2);
-        const label = confidence >= 75 ? "High" : "Low";
-        return { value: confidence, label };
-      }
+      // Outcome colours (by index)
+      const OUTCOME_COLORS = ['#1e90ff', '#10b981', '#f59e0b', '#a855f7', '#ef4444'];
 
-      // Get AI vs crowd divergence
-      function getAICrowdDivergence(market) {
-        // Simulated - would come from actual AI analysis
-        const totalYes = market.predictions?.filter(p => p.outcome === "YES").length || 0;
-        const totalNo = market.predictions?.filter(p => p.outcome === "NO").length || 0;
-        const total = totalYes + totalNo;
-        
-        if (total === 0) return 72; // Default AI prediction
-        
-        const crowdYes = (totalYes / total) * 100;
-        return crowdYes;
+      // Compute per-outcome prediction stats from real data
+      function getOutcomeStats(market) {
+        const outcomes = market.outcomes || ['YES', 'NO'];
+        const predictions = market.predictions || [];
+
+        const counts  = new Array(outcomes.length).fill(0);
+        const amounts = new Array(outcomes.length).fill(0);
+
+        for (const p of predictions) {
+          const idx = p.outcomeIndex ?? p.outcome_index;
+          if (idx >= 0 && idx < outcomes.length) {
+            counts[idx]++;
+            amounts[idx] += parseInt(p.amount ) / 1e6 || 0;
+          }
+        }
+
+        const totalCount  = counts.reduce((a, b) => a + b, 0);
+        const totalAmount = amounts.reduce((a, b) => a + b, 0);
+
+        const leadingIdx = counts.indexOf(Math.max(...counts));
+
+        return outcomes.map((name, i) => ({
+          name,
+          count:   counts[i],
+          amount:  amounts[i],
+          pct:     totalCount > 0 ? (counts[i] / totalCount) * 100 : 0,
+          color:   OUTCOME_COLORS[i % OUTCOME_COLORS.length],
+          leading: totalCount > 0 && i === leadingIdx,
+        }));
       }
 
       // Create market card
       function createMarketCard(market) {
-        const outcomes = market.outcomes || ["YES", "NO"];
-        const totalPredictions = market.totalPredictions || market.predictions?.length || 0;
-        const confidence = calculateAIConfidence(market);
-        const aiPrediction = getAICrowdDivergence(market);
-        const crowdPrediction = 100 - aiPrediction;
+        const stats        = getOutcomeStats(market);
+        const totalCount   = stats.reduce((s, o) => s + o.count, 0);
+        const totalAmount  = stats.reduce((s, o) => s + o.amount, 0);
+        const isActive     = market.status === 'active';
+        const marketJSON   = JSON.stringify(market).replace(/'/g, "&#39;");
+
+        const outcomeRows = stats.map(o => `
+          <div class="outcome-row">
+            <div class="outcome-label">
+              <span class="outcome-name" style="color:${o.color}">${o.name}</span>
+              ${o.leading ? '<span class="leading-badge">leading</span>' : ''}
+              <span class="outcome-tally">${o.count} pred &middot; $${o.amount.toFixed(2)}</span>
+            </div>
+            <div class="outcome-bar-wrap">
+              <div class="outcome-bar-fill" style="width:${o.pct.toFixed(1)}%;background:${o.color}"></div>
+            </div>
+            <span class="outcome-pct" style="color:${o.color}">${totalCount > 0 ? o.pct.toFixed(0) + '%' : '—'}</span>
+          </div>
+        `).join('');
+
+        const noPredNote = totalCount === 0
+          ? '<p class="no-pred-note">No predictions yet — be the first!</p>' : '';
+
+        const clickAttr = isActive ? `onclick='openPredictionModal(${marketJSON})'` : '';
 
         return `
-          <div class="market-card" onclick='${market.status === "active" ? `openPredictionModal(${JSON.stringify(market).replace(/'/g, "&#39;")})` : ""}'>
+          <div class="market-card" ${clickAttr}>
             <div class="market-header">
-              <div class="market-icon">🏠</div>
               <div class="market-info">
                 <div class="market-title">${market.title || market.question}</div>
-                <div class="market-meta">Ends: ${formatDate(market.deadline || market.resolutionDate)}</div>
+                <div class="market-meta">${formatDate(market.resolvesAt || market.deadline || market.resolutionDate)}</div>
               </div>
             </div>
 
-            <div class="market-stats-row">
-              <div class="market-stat">
-                <div class="market-stat-label">AI</div>
-                <div class="market-stat-value" style="color: #10b981">${Math.round(aiPrediction)}%</div>
-              </div>
-              <div class="market-stat">
-                <div class="market-stat-label">Crowd</div>
-                <div class="market-stat-value" style="color: #ef4444">${Math.round(crowdPrediction)}%</div>
-              </div>
-              <div class="market-stat">
-                <div class="market-stat-label">Divergence</div>
-                <div class="market-stat-value">${Math.abs(Math.round(aiPrediction - crowdPrediction))}%</div>
-              </div>
-            </div>
-
-            <div class="market-progress">
-              <div class="progress-labels">
-                <span style="color: #10b981">AI: ${outcomes[0] || "YES"}</span>
-                <span style="color: #ef4444">Crowd: ${outcomes[1] || "NO"}</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${aiPrediction}%"></div>
-              </div>
+            <div class="outcome-list">
+              ${outcomeRows}
+              ${noPredNote}
             </div>
 
             <div class="market-footer">
-              <div>
-                <div class="market-status ${market.status === 'active' ? 'status-active' : 'status-resolved'}">
-                  <span>●</span> ${market.status === 'active' ? 'Active' : 'Resolved'}
-                </div>
+              <div class="market-status ${isActive ? 'status-active' : 'status-resolved'}">
+                <span>●</span> ${isActive ? 'Active' : 'Resolved'}
               </div>
-              <div class="market-confidence confidence-${confidence.label.toLowerCase()}">
-                🎯 Confidence: ${confidence.label}
-              </div>
-              <a href="#" class="trade-market-btn" onclick="event.stopPropagation(); event.preventDefault(); openPredictionModal(${JSON.stringify(market).replace(/'/g, "&#39;")})">
-                Trade Market →
-              </a>
+              <div class="market-totals">${totalCount} predictions &middot; $${totalAmount.toFixed(2)} USDC</div>
+              ${isActive ? `<a href="#" class="trade-market-btn" onclick="event.stopPropagation();event.preventDefault();openPredictionModal(${marketJSON})">Predict →</a>` : ''}
             </div>
           </div>
         `;
@@ -1117,14 +1137,15 @@
 
       // Update hero stats
       function updateStats(markets) {
-        const totalVolume = markets.reduce((sum, m) => sum + m.predictions.reduce((sum2, p) => sum2 + (p.amount / 1e6 || 0), 0), 0);
-        const totalPredictions = markets.reduce((sum, m) => sum + (m.totalPredictions || m.predictions?.length || 0), 0);
-        const activeMarkets = markets.filter(m => m.status === 'active').length;
-        
+        const totalVolume      = markets.reduce((s, m) => s + (m.predictions || []).reduce((s2, p) => s2 + (parseInt(p.amount) / 1e6 || 0), 0), 0);
+        const totalPredictions = markets.reduce((s, m) => s + (m.predictions?.length || 0), 0);
+        const activeMarkets    = markets.filter(m => m.status === 'active').length;
+        const resolvedMarkets  = markets.filter(m => m.status === 'resolved').length;
+
         const stats = document.getElementById('stats');
         stats.children[0].querySelector('.stat-value').textContent = `$${totalVolume.toFixed(2)}`;
         stats.children[1].querySelector('.stat-value').textContent = activeMarkets;
-        stats.children[2].querySelector('.stat-value').textContent = '78.6%'; // Mock accuracy
+        stats.children[2].querySelector('.stat-value').textContent = resolvedMarkets;
         stats.children[3].querySelector('.stat-value').textContent = totalPredictions;
       }
 
